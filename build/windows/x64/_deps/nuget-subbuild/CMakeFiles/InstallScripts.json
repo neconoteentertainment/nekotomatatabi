@@ -1,7 +1,0 @@
-{
-	"InstallScripts" : 
-	[
-		"C:/Dev5/nekotomatatabi/build/windows/x64/_deps/nuget-subbuild/cmake_install.cmake"
-	],
-	"Parallel" : false
-}
