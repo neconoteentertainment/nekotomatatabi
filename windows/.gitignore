@@ -1,0 +1,4 @@
+flutter/ephemeral/
+*.vcxproj
+*.vcxproj.filters
+*.sln

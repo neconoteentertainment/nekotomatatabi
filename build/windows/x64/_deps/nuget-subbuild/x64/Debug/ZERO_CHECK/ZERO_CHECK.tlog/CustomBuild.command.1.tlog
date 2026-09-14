@@ -1,0 +1,10 @@
+^C:\DEV5\NEKOTOMATATABI\BUILD\WINDOWS\X64\_DEPS\NUGET-SUBBUILD\CMAKEFILES\EF63FEAA86994DA8BD70333B02B7B144\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/Dev5/nekotomatatabi/build/windows/x64/_deps/nuget-subbuild -BC:/Dev5/nekotomatatabi/build/windows/x64/_deps/nuget-subbuild --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/Dev5/nekotomatatabi/build/windows/x64/_deps/nuget-subbuild/nuget-populate.slnx
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

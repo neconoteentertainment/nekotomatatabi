@@ -1,0 +1,49 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "C:/Dev5/nekotomatatabi/build/windows/x64/_deps/nuget-subbuild/CMakeFiles/nuget-populate"
+		},
+		{
+			"file" : "C:/Dev5/nekotomatatabi/build/windows/x64/_deps/nuget-subbuild/CMakeFiles/ef63feaa86994da8bd70333b02b7b144/nuget-populate.rule"
+		},
+		{
+			"file" : "C:/Dev5/nekotomatatabi/build/windows/x64/_deps/nuget-subbuild/CMakeFiles/a2d7661bbea7125dd4ded20fca2dcfa0/nuget-populate-complete.rule"
+		},
+		{
+			"file" : "C:/Dev5/nekotomatatabi/build/windows/x64/_deps/nuget-subbuild/CMakeFiles/b2755e2b6961120904ca6f7117fe45a2/nuget-populate-build.rule"
+		},
+		{
+			"file" : "C:/Dev5/nekotomatatabi/build/windows/x64/_deps/nuget-subbuild/CMakeFiles/b2755e2b6961120904ca6f7117fe45a2/nuget-populate-configure.rule"
+		},
+		{
+			"file" : "C:/Dev5/nekotomatatabi/build/windows/x64/_deps/nuget-subbuild/CMakeFiles/b2755e2b6961120904ca6f7117fe45a2/nuget-populate-copyfile.rule"
+		},
+		{
+			"file" : "C:/Dev5/nekotomatatabi/build/windows/x64/_deps/nuget-subbuild/CMakeFiles/b2755e2b6961120904ca6f7117fe45a2/nuget-populate-download.rule"
+		},
+		{
+			"file" : "C:/Dev5/nekotomatatabi/build/windows/x64/_deps/nuget-subbuild/CMakeFiles/b2755e2b6961120904ca6f7117fe45a2/nuget-populate-install.rule"
+		},
+		{
+			"file" : "C:/Dev5/nekotomatatabi/build/windows/x64/_deps/nuget-subbuild/CMakeFiles/b2755e2b6961120904ca6f7117fe45a2/nuget-populate-mkdir.rule"
+		},
+		{
+			"file" : "C:/Dev5/nekotomatatabi/build/windows/x64/_deps/nuget-subbuild/CMakeFiles/b2755e2b6961120904ca6f7117fe45a2/nuget-populate-patch.rule"
+		},
+		{
+			"file" : "C:/Dev5/nekotomatatabi/build/windows/x64/_deps/nuget-subbuild/CMakeFiles/b2755e2b6961120904ca6f7117fe45a2/nuget-populate-test.rule"
+		},
+		{
+			"file" : "C:/Dev5/nekotomatatabi/build/windows/x64/_deps/nuget-subbuild/CMakeFiles/b2755e2b6961120904ca6f7117fe45a2/nuget-populate-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"nuget-populate"
+		],
+		"name" : "nuget-populate"
+	}
+}
