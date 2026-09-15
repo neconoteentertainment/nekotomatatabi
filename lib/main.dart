@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'screens/home_screen.dart';
 import 'services/app_repository.dart';
@@ -6,6 +7,7 @@ import 'services/storage_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setPreferredOrientations(const [DeviceOrientation.portraitUp]);
   final repository = AppRepository(StorageService());
   await repository.initialize();
   runApp(NekotoMataTabiApp(repository: repository));

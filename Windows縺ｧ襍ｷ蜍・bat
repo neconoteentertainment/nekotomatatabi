@@ -1,0 +1,26 @@
+@echo off
+setlocal
+cd /d "%~dp0"
+where flutter >nul 2>&1
+if errorlevel 1 (
+  echo Flutter command was not found. Please add Flutter to PATH.
+  pause
+  exit /b 1
+)
+if not exist "windows\CMakeLists.txt" (
+  echo Creating Windows desktop project...
+  call flutter create --platforms=windows .
+  if errorlevel 1 goto :error
+)
+echo Running flutter pub get...
+call flutter pub get
+if errorlevel 1 goto :error
+echo Starting Windows app...
+call flutter run -d windows
+if errorlevel 1 goto :error
+exit /b 0
+:error
+echo.
+echo An error occurred. Please copy the messages above and send them for review.
+pause
+exit /b 1

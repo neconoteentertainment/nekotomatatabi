@@ -23,7 +23,7 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
-      title: '過去の思い出を振り返る',
+      title: '旅の思い出を振り返る',
       child: Column(children: [
         TabBar(controller: _tabs, tabs: const [Tab(text: '一覧'), Tab(text: '日本地図'), Tab(text: 'ピン地図')]),
         Expanded(child: AnimatedBuilder(animation: widget.repository, builder: (_, __) => TabBarView(controller: _tabs, children: [

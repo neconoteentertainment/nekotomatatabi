@@ -6,10 +6,12 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/travel_memory.dart';
+import '../models/travel_plan.dart';
 
 class StorageService {
   static const _memoriesKey = 'travel_memories_v1';
   static const _stampPathsKey = 'stamp_paths_v1';
+  static const _travelPlansKey = 'travel_plans_v1';
 
   Future<List<TravelMemory>> loadMemories() async {
     final prefs = await SharedPreferences.getInstance();
@@ -32,6 +34,31 @@ class StorageService {
     await prefs.setString(
       _memoriesKey,
       jsonEncode(memories.map((e) => e.toJson()).toList()),
+    );
+  }
+
+
+  Future<List<TravelPlan>> loadTravelPlans() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_travelPlansKey);
+    if (raw == null || raw.isEmpty) return [];
+    try {
+      final data = jsonDecode(raw) as List<dynamic>;
+      final plans = data
+          .map((e) => TravelPlan.fromJson(Map<String, dynamic>.from(e as Map)))
+          .toList();
+      plans.sort((a, b) => a.date.compareTo(b.date));
+      return plans;
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<void> saveTravelPlans(List<TravelPlan> plans) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      _travelPlansKey,
+      jsonEncode(plans.map((e) => e.toJson()).toList()),
     );
   }
 

@@ -1,67 +1,51 @@
-# ねことまた旅（初版プロトタイプ）
+# ねことまた旅
 
-仕様書.xlsx をもとに作成した Flutter ソースです。
+猫スタンプと一緒に旅の思い出を残す Flutter アプリです。
 
-## 実装済み
-- GPSから現在地を取得
-- OpenStreetMap / Overpass APIで約2.5km以内の観光地・施設候補を表示
-- 訪問場所、訪問日、一言メモを端末内に保存
-- 都道府県別の訪問状況表示（47都道府県マップ）
-- OpenStreetMap上に訪問地点をピン表示
-- 写真を複数枚、訪問記録に紐づけて保存
-- カメラ上に自作スタンプを表示しながら撮影
-- 撮影写真へスタンプを合成して保存
-- 文字スタンプ（デフォルト「ねことまた旅」）
-- 自作スタンプ4枠。端末内へコピーしてアプリ更新後も保持する設計
-- 観光地1件につき1P、ご当地アイテム 5/10/20/30/40/50P
-- アプリ使用方法
+## 2026-09-15 修正版の主な変更
 
-## 初回セットアップ
-この環境には Flutter SDK が無いため、Android/iOSの生成済みネイティブ雛形までは検証できていません。
-Flutter SDK が入ったPCでプロジェクトフォルダを開き、次を実行してください。
+- 周辺施設検索を通常300m圏内に変更し、巨大施設向けに1km検索も選択可能にしました。
+- 観光名所、寺社・教会、博物館・美術館、公園・庭園、城・史跡、動物園・水族館、展望台、商業施設、ホテル・旅館、ギャラリーを中心に候補を絞りました。
+- 周辺施設カテゴリを日本語表示にしました。
+- 周辺施設取得失敗時の自動再試行とOverpass取得先の切替を追加しました。
+- GPS取得失敗と周辺施設取得失敗を分けて表示し、GPS取得後は施設検索が失敗しても手入力できます。
+- 訪問日はGPSを取得した時刻を基準に保存します。
+- カメラにピンチズーム、倍率表示、タップフォーカス、露出調整、前後カメラ切替、フラッシュ切替を追加しました。
+- カメラのみ縦・横画面の両方で利用できます。
+- 猫スタンプ・文字スタンプを複数配置でき、それぞれ移動・拡大縮小・削除できます。
+- スタート画面を3項目ずつのページ切替表示に変更し、「旅の予定」を追加しました。
+- 「過去の思い出を振り返る」を「旅の思い出を振り返る」に変更しました。
+- 1日の旅程を作成し、QRコードで共有・読み込みできる「旅の予定」機能を追加しました。
 
-```bash
-flutter create . --platforms=android,ios --org com.neconote --project-name nekotomatatabi
-flutter pub get
-flutter run
-```
+## Windows
 
-`android/app/src/main/AndroidManifest.xml` と `ios/Runner/Info.plist` は本ZIPの内容を使用してください。`flutter create` により上書きされた場合は、権限設定を本ファイルから戻してください。
+`Windowsで起動.bat` をダブルクリックしてください。
 
-## 初版で仮決めした仕様
-1. データ保存先: クラウドではなく端末内（SharedPreferences + ApplicationDocumentsDirectory）
-2. 周辺観光地: APIキー不要のOpenStreetMap/Overpassを利用
-3. 「日本地図を塗りつぶす」: 初版は47都道府県を色分けする簡易マップ
-4. ご当地アイテム: 地域区分が未定のため、まず共通6段階で実装
-5. 制作者HP: `https://example.com` の仮URL。`lib/screens/home_screen.dart` のURLを本番URLへ変更してください
+手動の場合:
 
-## 次回仕様書で決めたい点
-- ご当地アイテムの「各地域」が8地方なのか47都道府県なのか
-- 旅行単位（例: 2026年京都旅行）の作成・名称変更ルール
-- 写真の端末外バックアップ（Firebase / iCloud / Google Drive等）の要否
-- 正式な日本地図SVGのデザイン
-- 観光地候補の取得元をGoogle Places等にするか（API料金・利用規約を考慮）
-- 制作者HPの正式URL
-
-## 注意
-OpenStreetMap / Overpass / Nominatim は外部サービスです。公開規模が大きくなる場合は、利用規約とアクセス頻度を再確認し、必要に応じて正式な観光地APIへ切り替えてください。
-
-
-## Windowsで `No Windows desktop project configured` が出る場合
-
-初版の `setup_windows.bat` に Windows プラットフォーム指定が抜けていました。修正版では対応済みです。
-
-1. `setup_windows.bat` を実行
-2. 完了後にコマンドプロンプトでプロジェクトフォルダへ移動
-3. `flutter run -d windows` を実行
-
-手動で直す場合は、プロジェクトフォルダで以下を実行してください。
-
-```bat
-flutter config --enable-windows-desktop
-flutter create . --platforms=windows --org com.neconote --project-name nekotomatatabi
+```powershell
 flutter pub get
 flutter run -d windows
 ```
 
-Windowsで標準 `camera` APIを利用できるよう `camera_windows` も依存関係に追加しています。
+## macOS / iPhone
+
+初回はプロジェクト直下で:
+
+```bash
+./setup_mac.sh
+```
+
+その後:
+
+```bash
+open ios/Runner.xcworkspace
+```
+
+XcodeでTeamを設定してiPhone実機を選択し、Runしてください。
+
+## 補足
+
+- データは端末内保存です。
+- QR共有は旅程データそのものをQR化するため、サーバーは使用しません。
+- 周辺施設検索はOpenStreetMap / Overpass系公開データを利用しています。通信状況や公開サーバーの混雑時は候補取得に失敗する場合がありますが、現在地取得後は手入力で記録できます。
