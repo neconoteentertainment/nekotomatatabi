@@ -165,7 +165,7 @@ class _RecordScreenState extends State<RecordScreen> {
                 SegmentedButton<int>(
                   segments: const [
                     ButtonSegment(value: 300, label: Text('300m'), icon: Icon(Icons.location_on_outlined)),
-                    ButtonSegment(value: 1000, label: Text('1km'), icon: Icon(Icons.theme_park_outlined)),
+                    ButtonSegment(value: 1000, label: Text('1km'), icon: Icon(Icons.map)),
                   ],
                   selected: {_radiusMeters},
                   onSelectionChanged: _loading ? null : (value) => setState(() => _radiusMeters = value.first),
