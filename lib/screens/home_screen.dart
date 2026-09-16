@@ -7,6 +7,7 @@ import 'history_screen.dart';
 import 'item_screen.dart';
 import 'record_screen.dart';
 import 'stamp_editor_screen.dart';
+import 'settings_screen.dart';
 import 'travel_plan_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -72,7 +73,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 14),
               SizedBox(
-                height: 268,
+                height: 318,
                 child: PageView(
                   controller: _pages,
                   onPageChanged: (value) => setState(() => _page = value),
@@ -85,9 +86,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     _menuPage([
                       MenuCard(icon: Icons.pets, title: 'スタンプエディット', subtitle: '自分の猫などの透過画像を4個まで保存', onTap: () => _push(StampEditorScreen(repository: repository))),
                       MenuCard(icon: Icons.card_giftcard, title: 'ご当地アイテムを確認', subtitle: '訪問ポイントでアイテムを解放', onTap: () => _push(ItemScreen(repository: repository))),
-                      MenuCard(icon: Icons.help_outline, title: 'アプリの使用方法', onTap: () => showDialog<void>(context: context, builder: (_) => const _HelpDialog())),
+                      MenuCard(icon: Icons.settings_outlined, title: '設定', subtitle: 'アプリの設定・情報を確認', onTap: () => _push(const SettingsScreen())),
                     ]),
                     _menuPage([
+                      MenuCard(icon: Icons.help_outline, title: 'アプリの使用方法', onTap: () => showDialog<void>(context: context, builder: (_) => const _HelpDialog())),
                       MenuCard(
                         icon: Icons.public,
                         title: '制作者のHP',

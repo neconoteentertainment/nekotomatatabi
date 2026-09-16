@@ -66,15 +66,18 @@ class _CameraScreenState extends State<CameraScreen> {
   FlashMode _flashMode = FlashMode.off;
   Offset? _focusIndicator;
   Timer? _focusTimer;
+  bool _showStampPanel = false;
+  int _orientationIndex = 0;
+  static const _orientations = <DeviceOrientation>[
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
+  ];
 
   @override
   void initState() {
     super.initState();
-    SystemChrome.setPreferredOrientations(const [
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
+    SystemChrome.setPreferredOrientations(const [DeviceOrientation.portraitUp]);
     _init();
   }
 
@@ -103,6 +106,9 @@ class _CameraScreenState extends State<CameraScreen> {
       imageFormatGroup: ImageFormatGroup.jpeg,
     );
     await controller.initialize();
+    try {
+      await controller.lockCaptureOrientation(_orientations[_orientationIndex]);
+    } catch (_) {}
 
     double minZoom = 1.0;
     double maxZoom = 1.0;
@@ -140,6 +146,17 @@ class _CameraScreenState extends State<CameraScreen> {
     _controller?.dispose();
     SystemChrome.setPreferredOrientations(const [DeviceOrientation.portraitUp]);
     super.dispose();
+  }
+
+
+  Future<void> _cycleOrientation() async {
+    final nextIndex = (_orientationIndex + 1) % _orientations.length;
+    final next = _orientations[nextIndex];
+    setState(() => _orientationIndex = nextIndex);
+    await SystemChrome.setPreferredOrientations([next]);
+    try {
+      await _controller?.lockCaptureOrientation(next);
+    } catch (_) {}
   }
 
   Future<void> _switchCamera() async {
@@ -228,6 +245,7 @@ class _CameraScreenState extends State<CameraScreen> {
     setState(() {
       _overlays.add(item);
       _selectedOverlayId = item.id;
+      _showStampPanel = false;
     });
   }
 
@@ -428,14 +446,13 @@ class _CameraScreenState extends State<CameraScreen> {
                   ),
                 ),
                 if (_maxExposure > _minExposure)
-                  Positioned(
-                    right: 8,
-                    top: 70,
-                    bottom: 190,
-                    child: RotatedBox(
-                      quarterTurns: 3,
-                      child: SizedBox(
-                        width: 170,
+                  if (constraints.maxWidth > constraints.maxHeight)
+                    Positioned(
+                      top: 62,
+                      left: constraints.maxWidth * .2,
+                      right: constraints.maxWidth * .2,
+                      child: Container(
+                        color: Colors.black38,
                         child: Slider(
                           value: _exposure.clamp(_minExposure, _maxExposure).toDouble(),
                           min: _minExposure,
@@ -443,8 +460,24 @@ class _CameraScreenState extends State<CameraScreen> {
                           onChanged: _setExposure,
                         ),
                       ),
+                    )
+                  else
+                    Positioned(
+                      right: 2,
+                      top: 80,
+                      child: RotatedBox(
+                        quarterTurns: 3,
+                        child: SizedBox(
+                          width: (constraints.maxHeight - 300).clamp(150.0, 320.0),
+                          child: Slider(
+                            value: _exposure.clamp(_minExposure, _maxExposure).toDouble(),
+                            min: _minExposure,
+                            max: _maxExposure,
+                            onChanged: _setExposure,
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
                 Positioned(
                   left: 0,
                   right: 0,
@@ -452,48 +485,66 @@ class _CameraScreenState extends State<CameraScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Container(
-                        color: Colors.black45,
-                        height: 62,
-                        child: ListView(
-                          scrollDirection: Axis.horizontal,
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                          children: [
-                            ActionChip(avatar: const Icon(Icons.text_fields), label: const Text('文字追加'), onPressed: _addText),
-                            const SizedBox(width: 8),
-                            ...List.generate(4, (i) {
-                              final path = widget.repository.stampPaths[i];
-                              return Padding(
-                                padding: const EdgeInsets.only(right: 8),
-                                child: ActionChip(
-                                  label: Text('猫${i + 1}'),
-                                  avatar: path != null && File(path).existsSync()
-                                      ? CircleAvatar(backgroundImage: FileImage(File(path)))
-                                      : const Icon(Icons.pets),
-                                  onPressed: path == null ? null : () => _addStamp(i),
-                                ),
-                              );
-                            }),
-                            if (_selectedOverlayId != null)
-                              ActionChip(avatar: const Icon(Icons.delete_outline), label: const Text('選択中を削除'), onPressed: _removeSelectedOverlay),
-                            if (_overlays.isNotEmpty) ...[
+                      if (_showStampPanel)
+                        Container(
+                          color: Colors.black54,
+                          height: 62,
+                          child: ListView(
+                            scrollDirection: Axis.horizontal,
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            children: [
+                              ActionChip(avatar: const Icon(Icons.text_fields), label: const Text('文字追加'), onPressed: () async { await _addText(); if (mounted) setState(() => _showStampPanel = false); }),
                               const SizedBox(width: 8),
-                              ActionChip(
-                                avatar: const Icon(Icons.layers_clear),
-                                label: const Text('全部消す'),
-                                onPressed: () => setState(() {
-                                  _overlays.clear();
-                                  _selectedOverlayId = null;
-                                }),
-                              ),
+                              ...List.generate(4, (i) {
+                                final path = widget.repository.stampPaths[i];
+                                return Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: ActionChip(
+                                    label: Text('猫${i + 1}'),
+                                    avatar: path != null && File(path).existsSync()
+                                        ? CircleAvatar(backgroundImage: FileImage(File(path)))
+                                        : const Icon(Icons.pets),
+                                    onPressed: path == null ? null : () => _addStamp(i),
+                                  ),
+                                );
+                              }),
+                              if (_selectedOverlayId != null)
+                                ActionChip(avatar: const Icon(Icons.delete_outline), label: const Text('選択中を削除'), onPressed: _removeSelectedOverlay),
+                              if (_overlays.isNotEmpty) ...[
+                                const SizedBox(width: 8),
+                                ActionChip(
+                                  avatar: const Icon(Icons.layers_clear),
+                                  label: const Text('全部消す'),
+                                  onPressed: () => setState(() {
+                                    _overlays.clear();
+                                    _selectedOverlayId = null;
+                                  }),
+                                ),
+                              ],
                             ],
-                          ],
+                          ),
                         ),
-                      ),
                       const SizedBox(height: 8),
-                      FloatingActionButton.large(
-                        onPressed: _saving || _initializing ? null : _shoot,
-                        child: _saving || _initializing ? const CircularProgressIndicator() : const Icon(Icons.camera_alt, size: 34),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          IconButton.filledTonal(
+                            onPressed: () => setState(() => _showStampPanel = !_showStampPanel),
+                            tooltip: 'スタンプ',
+                            icon: const Icon(Icons.pets),
+                          ),
+                          const SizedBox(width: 18),
+                          FloatingActionButton.large(
+                            onPressed: _saving || _initializing ? null : _shoot,
+                            child: _saving || _initializing ? const CircularProgressIndicator() : const Icon(Icons.camera_alt, size: 34),
+                          ),
+                          const SizedBox(width: 18),
+                          IconButton.filledTonal(
+                            onPressed: _cycleOrientation,
+                            tooltip: '画面を回転',
+                            icon: const Icon(Icons.screen_rotation),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 4),
                       const Text('背景をピンチ: ズーム / タップ: フォーカス / スタンプをピンチ: 拡大縮小', style: TextStyle(color: Colors.white70, fontSize: 11)),

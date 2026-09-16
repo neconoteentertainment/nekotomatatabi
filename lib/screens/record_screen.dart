@@ -97,7 +97,10 @@ class _RecordScreenState extends State<RecordScreen> {
     );
     await widget.repository.addMemory(memory);
     if (!mounted) return;
-    setState(() => _selectedMemoryId = memory.id);
+    setState(() {
+      _selectedMemoryId = memory.id;
+      _places = [];
+    });
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${place.name} を記録しました（+1P）')));
   }
 
@@ -133,7 +136,10 @@ class _RecordScreenState extends State<RecordScreen> {
       photoPaths: const [],
     );
     await widget.repository.addMemory(memory);
-    if (mounted) setState(() => _selectedMemoryId = memory.id);
+    if (mounted) setState(() {
+      _selectedMemoryId = memory.id;
+      _places = [];
+    });
   }
 
   Future<void> _openCamera() async {
@@ -142,7 +148,7 @@ class _RecordScreenState extends State<RecordScreen> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('先に観光地を1件記録してください。写真は記録した場所に紐づきます。')));
       return;
     }
-    _selectedMemoryId ??= memories.first.id;
+    _selectedMemoryId = memories.first.id;
     await Navigator.of(context).push(MaterialPageRoute(
       builder: (_) => CameraScreen(repository: widget.repository, memoryId: _selectedMemoryId!),
     ));
@@ -232,16 +238,27 @@ class _RecordScreenState extends State<RecordScreen> {
                 const SizedBox(height: 8),
                 const Text('自作スタンプや文字を複数重ねて撮影できます。写真は選択した訪問記録に保存されます。'),
                 const SizedBox(height: 12),
-                if (widget.repository.memories.isNotEmpty)
-                  DropdownButtonFormField<String>(
-                    value: _selectedMemoryId ?? widget.repository.memories.first.id,
-                    decoration: const InputDecoration(labelText: '写真を紐づける場所', border: OutlineInputBorder()),
-                    items: widget.repository.memories
-                        .take(20)
-                        .map((m) => DropdownMenuItem(value: m.id, child: Text(m.placeName, overflow: TextOverflow.ellipsis)))
-                        .toList(),
-                    onChanged: (v) => setState(() => _selectedMemoryId = v),
+                if (widget.repository.memories.isNotEmpty) ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.place_outlined),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            '最新の訪問地: ${widget.repository.memories.first.placeName}',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
+                ],
                 const SizedBox(height: 12),
                 FilledButton.icon(onPressed: _openCamera, icon: const Icon(Icons.camera_alt), label: const Text('写真を撮る')),
               ]),

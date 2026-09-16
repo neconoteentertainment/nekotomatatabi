@@ -29,7 +29,7 @@ class StampEditorScreen extends StatelessWidget {
           final path = repository.stampPaths[i];
           final exists = path != null && File(path).existsSync();
           return Card(child: Padding(padding: const EdgeInsets.all(12), child: Row(children: [
-            Container(width: 88, height: 88, decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(16)), child: exists ? Padding(padding: const EdgeInsets.all(6), child: Image.file(File(path), fit: BoxFit.contain)) : const Icon(Icons.pets, size: 42)),
+            Container(width: 88, height: 88, decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(16)), child: exists ? Padding(padding: const EdgeInsets.all(6), child: Image.file(File(path), key: ValueKey(path), fit: BoxFit.contain)) : const Icon(Icons.pets, size: 42)),
             const SizedBox(width: 14),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('スタンプ ${i + 1}', style: const TextStyle(fontWeight: FontWeight.bold)), const SizedBox(height: 8), Wrap(spacing: 8, children: [FilledButton.tonalIcon(onPressed: () => _pick(context, i), icon: const Icon(Icons.photo_library), label: Text(exists ? '差し替え' : '選択')), if (exists) TextButton.icon(onPressed: () => repository.clearStamp(i), icon: const Icon(Icons.delete_outline), label: const Text('削除'))])]))
           ])));

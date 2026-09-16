@@ -1,6 +1,11 @@
 import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:gal/gal.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
@@ -17,6 +22,8 @@ class TravelPlanScreen extends StatefulWidget {
 }
 
 class _TravelPlanScreenState extends State<TravelPlanScreen> {
+  final _picker = ImagePicker();
+
   Future<void> _editPlan([TravelPlan? original]) async {
     var date = original?.date ?? DateTime.now();
     final title = TextEditingController(text: original?.title ?? '');
@@ -35,21 +42,13 @@ class _TravelPlanScreenState extends State<TravelPlanScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  TextField(
-                    controller: title,
-                    decoration: const InputDecoration(labelText: '予定名（例：名古屋日帰り旅行）'),
-                  ),
+                  TextField(controller: title, decoration: const InputDecoration(labelText: '予定名（例：名古屋日帰り旅行）')),
                   const SizedBox(height: 12),
                   OutlinedButton.icon(
                     icon: const Icon(Icons.calendar_month),
                     label: Text('${date.year}/${date.month}/${date.day}'),
                     onPressed: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: date,
-                        firstDate: DateTime(2020),
-                        lastDate: DateTime(2100),
-                      );
+                      final picked = await showDatePicker(context: context, initialDate: date, firstDate: DateTime(2020), lastDate: DateTime(2100));
                       if (picked != null) setLocalState(() => date = picked);
                     },
                   ),
@@ -63,10 +62,7 @@ class _TravelPlanScreenState extends State<TravelPlanScreen> {
                         leading: Text(item.time.isEmpty ? '--:--' : item.time),
                         title: Text(item.title),
                         subtitle: item.memo.isEmpty ? null : Text(item.memo),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.delete_outline),
-                          onPressed: () => setLocalState(() => items.removeAt(i)),
-                        ),
+                        trailing: IconButton(icon: const Icon(Icons.delete_outline), onPressed: () => setLocalState(() => items.removeAt(i))),
                         onTap: () async {
                           final edited = await _editPlanItem(context, item);
                           if (edited != null) {
@@ -105,15 +101,7 @@ class _TravelPlanScreenState extends State<TravelPlanScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('予定名を入力してください。')));
                   return;
                 }
-                Navigator.pop(
-                  dialogContext,
-                  TravelPlan(
-                    id: original?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
-                    title: name,
-                    date: date,
-                    items: List.unmodifiable(items),
-                  ),
-                );
+                Navigator.pop(dialogContext, TravelPlan(id: original?.id ?? DateTime.now().microsecondsSinceEpoch.toString(), title: name, date: date, items: List.unmodifiable(items)));
               },
               child: const Text('保存'),
             ),
@@ -121,14 +109,17 @@ class _TravelPlanScreenState extends State<TravelPlanScreen> {
         ),
       ),
     );
-
     if (result != null) await widget.repository.saveTravelPlan(result);
   }
 
   Future<TravelPlanItem?> _editPlanItem(BuildContext context, TravelPlanItem? original) async {
-    TimeOfDay time = _parseTime(original?.time) ?? TimeOfDay.now();
+    final parsed = _parseTime(original?.time) ?? TimeOfDay.now();
+    final hour = TextEditingController(text: parsed.hour.toString().padLeft(2, '0'));
+    final minute = TextEditingController(text: parsed.minute.toString().padLeft(2, '0'));
     final title = TextEditingController(text: original?.title ?? '');
     final memo = TextEditingController(text: original?.memo ?? '');
+    String? timeError;
+
     return showDialog<TravelPlanItem>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
@@ -137,14 +128,14 @@ class _TravelPlanScreenState extends State<TravelPlanScreen> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              OutlinedButton.icon(
-                icon: const Icon(Icons.schedule),
-                label: Text(_formatTime(time)),
-                onPressed: () async {
-                  final picked = await showTimePicker(context: context, initialTime: time);
-                  if (picked != null) setLocalState(() => time = picked);
-                },
+              Row(
+                children: [
+                  Expanded(child: TextField(controller: hour, keyboardType: TextInputType.number, textAlign: TextAlign.center, maxLength: 2, inputFormatters: [FilteringTextInputFormatter.digitsOnly], decoration: const InputDecoration(labelText: '時', counterText: ''))),
+                  const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text(':', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold))),
+                  Expanded(child: TextField(controller: minute, keyboardType: TextInputType.number, textAlign: TextAlign.center, maxLength: 2, inputFormatters: [FilteringTextInputFormatter.digitsOnly], decoration: const InputDecoration(labelText: '分', counterText: ''))),
+                ],
               ),
+              if (timeError != null) Padding(padding: const EdgeInsets.only(top: 6), child: Text(timeError!, style: TextStyle(color: Theme.of(context).colorScheme.error))),
               const SizedBox(height: 10),
               TextField(controller: title, decoration: const InputDecoration(labelText: '予定・行き先')),
               const SizedBox(height: 10),
@@ -155,11 +146,15 @@ class _TravelPlanScreenState extends State<TravelPlanScreen> {
             TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('キャンセル')),
             FilledButton(
               onPressed: () {
+                final h = int.tryParse(hour.text);
+                final m = int.tryParse(minute.text);
+                if (h == null || m == null || h < 0 || h > 23 || m < 0 || m > 59) {
+                  setLocalState(() => timeError = '時は0〜23、分は0〜59で入力してください。');
+                  return;
+                }
                 if (title.text.trim().isEmpty) return;
-                Navigator.pop(
-                  dialogContext,
-                  TravelPlanItem(time: _formatTime(time), title: title.text.trim(), memo: memo.text.trim()),
-                );
+                final time = '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
+                Navigator.pop(dialogContext, TravelPlanItem(time: time, title: title.text.trim(), memo: memo.text.trim()));
               },
               child: const Text('決定'),
             ),
@@ -175,28 +170,54 @@ class _TravelPlanScreenState extends State<TravelPlanScreen> {
     if (parts.length != 2) return null;
     final h = int.tryParse(parts[0]);
     final m = int.tryParse(parts[1]);
-    if (h == null || m == null) return null;
+    if (h == null || m == null || h < 0 || h > 23 || m < 0 || m > 59) return null;
     return TimeOfDay(hour: h, minute: m);
   }
 
-  String _formatTime(TimeOfDay value) => '${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}';
+  Future<Uint8List> _qrBytes(TravelPlan plan) async {
+    final painter = QrPainter(data: plan.toShareText(), version: QrVersions.auto, gapless: true);
+    final data = await painter.toImageData(1024, format: ui.ImageByteFormat.png);
+    if (data == null) throw Exception('QRコード画像を作成できませんでした。');
+    return data.buffer.asUint8List();
+  }
+
+  Future<void> _saveQr(TravelPlan plan) async {
+    try {
+      final bytes = await _qrBytes(plan);
+      await Gal.putImageBytes(bytes, name: 'nekotomatatabi_${DateTime.now().millisecondsSinceEpoch}');
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('QRコードを写真ライブラリへ保存しました。')));
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('QRコードの保存に失敗しました: $e')));
+    }
+  }
 
   void _showQr(TravelPlan plan) {
     showDialog<void>(
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('QRコードで共有'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('相手の「ねことまた旅」でこのQRコードを読み取ってください。'),
-            const SizedBox(height: 16),
-            QrImageView(data: plan.toShareText(), version: QrVersions.auto, size: 260),
-          ],
-        ),
-        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('閉じる'))],
+        content: Column(mainAxisSize: MainAxisSize.min, children: [
+          const Text('相手の「ねことまた旅」でこのQRコードを読み取ってください。'),
+          const SizedBox(height: 16),
+          QrImageView(data: plan.toShareText(), version: QrVersions.auto, size: 260),
+        ]),
+        actions: [
+          TextButton.icon(onPressed: () => _saveQr(plan), icon: const Icon(Icons.download), label: const Text('画像を保存')),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('閉じる')),
+        ],
       ),
     );
+  }
+
+  Future<void> _importRaw(String raw) async {
+    final imported = TravelPlan.fromShareText(raw);
+    if (imported == null) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('「ねことまた旅」の予定QRコードではありません。')));
+      return;
+    }
+    final plan = TravelPlan(id: DateTime.now().microsecondsSinceEpoch.toString(), title: imported.title, date: imported.date, items: imported.items);
+    await widget.repository.saveTravelPlan(plan);
+    if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('旅の予定を取り込みました。')));
   }
 
   Future<void> _scanQr() async {
@@ -205,20 +226,28 @@ class _TravelPlanScreenState extends State<TravelPlanScreen> {
       return;
     }
     final raw = await Navigator.of(context).push<String>(MaterialPageRoute(builder: (_) => const _QrScannerScreen()));
-    if (raw == null) return;
-    final imported = TravelPlan.fromShareText(raw);
-    if (imported == null) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('「ねことまた旅」の予定QRコードではありません。')));
+    if (raw != null) await _importRaw(raw);
+  }
+
+  Future<void> _scanQrFromImage() async {
+    if (!(Platform.isAndroid || Platform.isIOS)) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('画像からのQR読み取りはAndroid / iPhoneで利用できます。')));
       return;
     }
-    final plan = TravelPlan(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
-      title: imported.title,
-      date: imported.date,
-      items: imported.items,
-    );
-    await widget.repository.saveTravelPlan(plan);
-    if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('旅の予定を取り込みました。')));
+    final picked = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 100);
+    if (picked == null) return;
+    final controller = MobileScannerController(autoStart: false, formats: const [BarcodeFormat.qrCode]);
+    try {
+      final capture = await controller.analyzeImage(picked.path);
+      final raw = capture == null || capture.barcodes.isEmpty ? null : capture.barcodes.first.rawValue;
+      if (raw == null || raw.isEmpty) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('画像からQRコードを読み取れませんでした。')));
+        return;
+      }
+      await _importRaw(raw);
+    } finally {
+      await controller.dispose();
+    }
   }
 
   @override
@@ -226,7 +255,18 @@ class _TravelPlanScreenState extends State<TravelPlanScreen> {
     return AppScaffold(
       title: '旅の予定',
       actions: [
-        IconButton(onPressed: _scanQr, tooltip: 'QRコードを読み取る', icon: const Icon(Icons.qr_code_scanner)),
+        PopupMenuButton<String>(
+          tooltip: 'QRコードを読み取る',
+          icon: const Icon(Icons.qr_code_scanner),
+          onSelected: (value) {
+            if (value == 'camera') _scanQr();
+            if (value == 'image') _scanQrFromImage();
+          },
+          itemBuilder: (_) => const [
+            PopupMenuItem(value: 'camera', child: ListTile(leading: Icon(Icons.camera_alt_outlined), title: Text('カメラで読み取る'))),
+            PopupMenuItem(value: 'image', child: ListTile(leading: Icon(Icons.photo_library_outlined), title: Text('保存画像から読み取る'))),
+          ],
+        ),
       ],
       child: AnimatedBuilder(
         animation: widget.repository,
@@ -237,8 +277,7 @@ class _TravelPlanScreenState extends State<TravelPlanScreen> {
             children: [
               FilledButton.icon(onPressed: () => _editPlan(), icon: const Icon(Icons.add), label: const Text('新しい旅の予定を作る')),
               const SizedBox(height: 12),
-              if (plans.isEmpty)
-                const Card(child: Padding(padding: EdgeInsets.all(18), child: Text('まだ予定がありません。旅行当日の時刻と行き先を登録できます。'))),
+              if (plans.isEmpty) const Card(child: Padding(padding: EdgeInsets.all(18), child: Text('まだ予定がありません。旅行当日の時刻と行き先を登録できます。'))),
               ...plans.map((plan) => Card(
                     child: ExpansionTile(
                       leading: const CircleAvatar(child: Icon(Icons.route)),
@@ -247,24 +286,12 @@ class _TravelPlanScreenState extends State<TravelPlanScreen> {
                       childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                       children: [
                         if (plan.items.isEmpty) const ListTile(title: Text('予定はまだ登録されていません。')),
-                        ...plan.items.map((e) => ListTile(
-                              dense: true,
-                              leading: SizedBox(width: 48, child: Text(e.time)),
-                              title: Text(e.title),
-                              subtitle: e.memo.isEmpty ? null : Text(e.memo),
-                            )),
-                        Wrap(
-                          spacing: 8,
-                          children: [
-                            OutlinedButton.icon(onPressed: () => _editPlan(plan), icon: const Icon(Icons.edit), label: const Text('編集')),
-                            OutlinedButton.icon(onPressed: () => _showQr(plan), icon: const Icon(Icons.qr_code_2), label: const Text('QR共有')),
-                            TextButton.icon(
-                              onPressed: () => widget.repository.deleteTravelPlan(plan.id),
-                              icon: const Icon(Icons.delete_outline),
-                              label: const Text('削除'),
-                            ),
-                          ],
-                        ),
+                        ...plan.items.map((e) => ListTile(dense: true, leading: SizedBox(width: 48, child: Text(e.time)), title: Text(e.title), subtitle: e.memo.isEmpty ? null : Text(e.memo))),
+                        Wrap(spacing: 8, children: [
+                          OutlinedButton.icon(onPressed: () => _editPlan(plan), icon: const Icon(Icons.edit), label: const Text('編集')),
+                          OutlinedButton.icon(onPressed: () => _showQr(plan), icon: const Icon(Icons.qr_code_2), label: const Text('QR共有')),
+                          TextButton.icon(onPressed: () => widget.repository.deleteTravelPlan(plan.id), icon: const Icon(Icons.delete_outline), label: const Text('削除')),
+                        ]),
                       ],
                     ),
                   )),
@@ -284,12 +311,20 @@ class _QrScannerScreen extends StatefulWidget {
 
 class _QrScannerScreenState extends State<_QrScannerScreen> {
   bool _done = false;
+  final _controller = MobileScannerController(formats: const [BarcodeFormat.qrCode]);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('予定QRコードを読み取る')),
       body: MobileScanner(
+        controller: _controller,
         onDetect: (capture) {
           if (_done) return;
           final raw = capture.barcodes.isEmpty ? null : capture.barcodes.first.rawValue;

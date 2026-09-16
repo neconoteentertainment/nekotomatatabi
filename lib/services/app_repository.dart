@@ -70,9 +70,13 @@ class AppRepository extends ChangeNotifier {
   }
 
   Future<void> setStamp(int index, File source) async {
+    final old = _stampPaths[index];
     final saved = await _storage.copyStampIntoApp(source, index);
     _stampPaths[index] = saved;
     await _storage.saveStampPaths(_stampPaths);
+    if (old != null && old != saved) {
+      try { await File(old).delete(); } catch (_) {}
+    }
     notifyListeners();
   }
 

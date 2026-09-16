@@ -78,8 +78,9 @@ class StorageService {
     final stampDir = Directory(p.join(dir.path, 'stamps'));
     await stampDir.create(recursive: true);
     final ext = p.extension(source.path).isEmpty ? '.png' : p.extension(source.path);
-    final target = File(p.join(stampDir.path, 'stamp_$slot$ext'));
-    if (await target.exists()) await target.delete();
+    // 差し替え時に同じパスを再利用すると Image.file のキャッシュで旧画像が
+    // 表示されることがあるため、更新ごとに一意なファイル名で保存する。
+    final target = File(p.join(stampDir.path, 'stamp_${slot}_${DateTime.now().microsecondsSinceEpoch}$ext'));
     await source.copy(target.path);
     return target.path;
   }
