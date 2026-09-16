@@ -34,3 +34,6 @@ windows/flutter/ephemeral/
 # Misc
 *.log
 .DS_Store
+# Platform-generated / user-specific
+**/xcuserdata/
+*.xcuserstate
