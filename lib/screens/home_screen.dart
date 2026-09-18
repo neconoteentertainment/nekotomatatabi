@@ -52,135 +52,155 @@ class _HomeScreenState extends State<HomeScreen> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
-      backgroundColor: _background,
-      body: SafeArea(
-        child: AnimatedBuilder(
-          animation: repository,
-          builder: (context, _) {
-            if (!repository.ready) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            return ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                const _HeroImage(),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                  child: _VisitBar(
-                    visits: repository.memories.length,
-                    points: repository.points,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  height: 286,
-                  child: PageView(
-                    controller: _pages,
-                    onPageChanged: (value) => setState(() => _page = value),
+        backgroundColor: _background,
+        body: SafeArea(
+          child: AnimatedBuilder(
+            animation: repository,
+            builder: (context, _) {
+              if (!repository.ready) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  final height = constraints.maxHeight;
+                  final compact = height < 720;
+                  final heroFlex = compact ? 27 : 31;
+                  final menuFlex = compact ? 29 : 32;
+                  return Column(
                     children: [
-                      _MenuPage.cards(
-                        cards: [
-                          _HomeCardData(
-                            image: 'assets/home/card_record.jpg',
-                            icon: Icons.location_on_outlined,
-                            title: '旅の思い出を\n記録する',
-                            subtitle: 'GPSで観光地を探して\n訪問を保存',
-                            onTap: () => _push(RecordScreen(repository: repository)),
-                          ),
-                          _HomeCardData(
-                            image: 'assets/home/card_history.jpg',
-                            icon: Icons.photo_library_outlined,
-                            title: '旅の思い出を\n振り返る',
-                            subtitle: '日本地図・年月・写真\nから振り返る',
-                            onTap: () => _push(HistoryScreen(repository: repository)),
-                          ),
-                          _HomeCardData(
-                            image: 'assets/home/card_plan.jpg',
-                            icon: Icons.calendar_month_outlined,
-                            title: '旅の予定',
-                            subtitle: '1日のスケジュール作成\nQR共有',
-                            onTap: () => _push(TravelPlanScreen(repository: repository)),
-                          ),
-                        ],
+                      Expanded(flex: heroFlex, child: const _HeroImage()),
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(16, compact ? 6 : 10, 16, 0),
+                        child: _VisitBar(
+                          visits: repository.memories.length,
+                          points: repository.points,
+                          compact: compact,
+                        ),
                       ),
-                      _MenuPage.cards(
-                        cards: [
-                          _HomeCardData(
-                            image: 'assets/home/card_history.jpg',
-                            icon: Icons.pets,
-                            title: 'スタンプ\nエディット',
-                            subtitle: '自分の猫などの画像を\n4個まで保存',
-                            onTap: () => _push(StampEditorScreen(repository: repository)),
-                          ),
-                          _HomeCardData(
-                            image: 'assets/home/card_record.jpg',
-                            icon: Icons.card_giftcard_outlined,
-                            title: 'ご当地アイテム\nを確認',
-                            subtitle: '訪問ポイントで\nアイテムを解放',
-                            onTap: () => _push(ItemScreen(repository: repository)),
-                          ),
-                          _HomeCardData(
-                            image: 'assets/home/card_plan.jpg',
-                            icon: Icons.settings_outlined,
-                            title: '設定',
-                            subtitle: 'アプリの設定・情報を\n確認',
-                            onTap: () => _push(const SettingsScreen()),
-                          ),
-                        ],
-                      ),
-                      _MenuPage(
-                        cards: [
-                          _HomeFeatureCard(
-                            data: _HomeCardData(
-                              image: 'assets/home/card_history.jpg',
-                              icon: Icons.help_outline,
-                              title: 'アプリの\n使用方法',
-                              subtitle: 'ねことまた旅の\n使い方を見る',
-                              onTap: () => showDialog<void>(
-                                context: context,
-                                builder: (_) => const _HelpDialog(),
-                              ),
+                      SizedBox(height: compact ? 6 : 10),
+                      Expanded(
+                        flex: menuFlex,
+                        child: PageView(
+                          controller: _pages,
+                          onPageChanged: (value) => setState(() => _page = value),
+                          children: [
+                            _MenuPage.cards(
+                              cards: [
+                                _HomeCardData(
+                                  image: 'assets/home/card_record.jpg',
+                                  icon: Icons.location_on_outlined,
+                                  title: '旅の思い出を\n記録する',
+                                  subtitle: 'GPSで観光地を探して\n訪問を保存',
+                                  onTap: () => _push(RecordScreen(repository: repository)),
+                                ),
+                                _HomeCardData(
+                                  image: 'assets/home/card_history.jpg',
+                                  icon: Icons.photo_library_outlined,
+                                  title: '旅の思い出を\n振り返る',
+                                  subtitle: '日本地図・年月・写真\nから振り返る',
+                                  onTap: () => _push(HistoryScreen(repository: repository)),
+                                ),
+                                _HomeCardData(
+                                  image: 'assets/home/card_plan.jpg',
+                                  icon: Icons.calendar_month_outlined,
+                                  title: '旅の予定',
+                                  subtitle: '1日のスケジュール作成\nQR共有',
+                                  onTap: () => _push(TravelPlanScreen(repository: repository)),
+                                ),
+                              ],
                             ),
-                          ),
-                          _HomeFeatureCard(
-                            data: _HomeCardData(
-                              image: 'assets/home/card_record.jpg',
-                              icon: Icons.public,
-                              title: '制作者のHP',
-                              subtitle: '最新情報を\n確認する',
-                              onTap: () async {
-                                final uri = Uri.parse('https://example.com');
-                                if (!await launchUrl(uri, mode: LaunchMode.externalApplication) && context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('HPを開けませんでした。URL設定を確認してください。')),
-                                  );
-                                }
-                              },
+                            _MenuPage.cards(
+                              cards: [
+                                _HomeCardData(
+                                  image: 'assets/home/hero.jpg',
+                                  imageAlignment: const Alignment(0, -0.15),
+                                  icon: Icons.pets,
+                                  title: 'スタンプ\nエディット',
+                                  subtitle: 'お気に入りの猫画像を\n4個まで登録',
+                                  badge: 'MY CAT',
+                                  onTap: () => _push(StampEditorScreen(repository: repository)),
+                                ),
+                                _HomeCardData(
+                                  image: 'assets/home/card_record.jpg',
+                                  imageAlignment: Alignment.topCenter,
+                                  icon: Icons.card_giftcard_outlined,
+                                  title: 'ご当地アイテム\nを確認',
+                                  subtitle: '旅先で集めたポイントで\nご当地アイテムを解放',
+                                  badge: 'LOCAL',
+                                  onTap: () => _push(ItemScreen(repository: repository)),
+                                ),
+                                _HomeCardData(
+                                  image: 'assets/home/ad_banner.jpg',
+                                  imageAlignment: Alignment.centerRight,
+                                  icon: Icons.tune,
+                                  title: '設定',
+                                  subtitle: 'アプリの情報や\n各種設定を確認',
+                                  badge: 'SETTING',
+                                  onTap: () => _push(const SettingsScreen()),
+                                ),
+                              ],
                             ),
-                          ),
-                          const _EmptyHomeCard(),
-                        ],
+                            _MenuPage(
+                              cards: [
+                                _HomeFeatureCard(
+                                  data: _HomeCardData(
+                                    image: 'assets/home/card_history.jpg',
+                                    icon: Icons.help_outline,
+                                    title: 'アプリの\n使用方法',
+                                    subtitle: 'ねことまた旅の\n使い方を見る',
+                                    onTap: () => showDialog<void>(
+                                      context: context,
+                                      builder: (_) => const _HelpDialog(),
+                                    ),
+                                  ),
+                                ),
+                                _HomeFeatureCard(
+                                  data: _HomeCardData(
+                                    image: 'assets/home/card_record.jpg',
+                                    icon: Icons.public,
+                                    title: '制作者のHP',
+                                    subtitle: '最新情報を\n確認する',
+                                    onTap: () async {
+                                      final uri = Uri.parse('https://example.com');
+                                      if (!await launchUrl(uri, mode: LaunchMode.externalApplication) && context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text('HPを開けませんでした。URL設定を確認してください。')),
+                                        );
+                                      }
+                                    },
+                                  ),
+                                ),
+                                const _EmptyHomeCard(),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
+                      SizedBox(height: compact ? 6 : 10),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: SizedBox(
+                          height: compact ? 50 : 62,
+                          child: const _AdBanner(),
+                        ),
+                      ),
+                      SizedBox(height: compact ? 5 : 8),
+                      SizedBox(
+                        height: compact ? 42 : 48,
+                        child: _PageIndicator(
+                          page: _page,
+                          onPrevious: _page == 0 ? null : () => _movePage(-1),
+                          onNext: _page == 2 ? null : () => _movePage(1),
+                        ),
+                      ),
+                      SizedBox(height: compact ? 4 : 10),
                     ],
-                  ),
-                ),
-                const SizedBox(height: 10),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: _AdBanner(),
-                ),
-                const SizedBox(height: 12),
-                _PageIndicator(
-                  page: _page,
-                  onPrevious: _page == 0 ? null : () => _movePage(-1),
-                  onNext: _page == 2 ? null : () => _movePage(1),
-                ),
-                const SizedBox(height: 28),
-              ],
-            );
-          },
+                  );
+                },
+              );
+            },
+          ),
         ),
-      ),
       ),
     );
   }
@@ -191,8 +211,7 @@ class _HeroImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: 941 / 610,
+    return SizedBox.expand(
       child: Image.asset(
         'assets/home/hero.jpg',
         fit: BoxFit.cover,
@@ -203,14 +222,15 @@ class _HeroImage extends StatelessWidget {
 }
 
 class _VisitBar extends StatelessWidget {
-  const _VisitBar({required this.visits, required this.points});
+  const _VisitBar({required this.visits, required this.points, required this.compact});
   final int visits;
   final int points;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 58,
+      height: compact ? 48 : 56,
       padding: const EdgeInsets.symmetric(horizontal: 18),
       decoration: BoxDecoration(
         color: _HomeScreenState._panel,
@@ -219,20 +239,20 @@ class _VisitBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.pets, color: _HomeScreenState._gold, size: 27),
-          const SizedBox(width: 12),
-          Text(
-            '訪問 $visits か所',
-            style: const TextStyle(color: Colors.white, fontSize: 18),
-          ),
-          const Spacer(),
-          Container(width: 1, height: 28, color: Colors.white24),
-          const SizedBox(width: 18),
-          const Icon(Icons.map_outlined, color: _HomeScreenState._gold),
+          Icon(Icons.pets, color: _HomeScreenState._gold, size: compact ? 23 : 27),
           const SizedBox(width: 10),
           Text(
+            '訪問 $visits か所',
+            style: TextStyle(color: Colors.white, fontSize: compact ? 15 : 18),
+          ),
+          const Spacer(),
+          Container(width: 1, height: compact ? 22 : 28, color: Colors.white24),
+          const SizedBox(width: 16),
+          const Icon(Icons.map_outlined, color: _HomeScreenState._gold),
+          const SizedBox(width: 8),
+          Text(
             '${points}P',
-            style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
+            style: TextStyle(color: Colors.white, fontSize: compact ? 15 : 18, fontWeight: FontWeight.w600),
           ),
         ],
       ),
@@ -247,12 +267,16 @@ class _HomeCardData {
     required this.title,
     required this.subtitle,
     required this.onTap,
+    this.imageAlignment = Alignment.center,
+    this.badge,
   });
   final String image;
   final IconData icon;
   final String title;
   final String subtitle;
   final VoidCallback onTap;
+  final Alignment imageAlignment;
+  final String? badge;
 }
 
 class _MenuPage extends StatelessWidget {
@@ -285,101 +309,128 @@ class _HomeFeatureCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(18),
-        onTap: data.onTap,
-        child: Ink(
-          decoration: BoxDecoration(
-            color: const Color(0xE625211E),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxHeight < 235;
+        final imageHeight = compact ? 58.0 : 84.0;
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: _HomeScreenState._gold.withOpacity(.62)),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(18),
-            child: Column(
-              children: [
-                SizedBox(
-                  height: 92,
-                  width: double.infinity,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Image.asset(data.image, fit: BoxFit.cover),
-                      const DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [Colors.transparent, Color(0xAA171412)],
-                          ),
-                        ),
-                      ),
-                      Align(
-                        alignment: Alignment.bottomCenter,
-                        child: Transform.translate(
-                          offset: const Offset(0, 17),
-                          child: Container(
-                            width: 52,
-                            height: 52,
+            onTap: data.onTap,
+            child: Ink(
+              decoration: BoxDecoration(
+                color: const Color(0xE625211E),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: _HomeScreenState._gold.withOpacity(.62)),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(18),
+                child: Column(
+                  children: [
+                    SizedBox(
+                      height: imageHeight,
+                      width: double.infinity,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Image.asset(data.image, fit: BoxFit.cover, alignment: data.imageAlignment),
+                          const DecoratedBox(
                             decoration: BoxDecoration(
-                              color: const Color(0xE638302A),
-                              shape: BoxShape.circle,
-                              border: Border.all(color: _HomeScreenState._gold),
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [Colors.transparent, Color(0xCC171412)],
+                              ),
                             ),
-                            child: Icon(data.icon, color: _HomeScreenState._gold, size: 27),
                           ),
+                          if (data.badge != null)
+                            Positioned(
+                              left: 7,
+                              top: 7,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: Colors.black54,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: _HomeScreenState._gold.withOpacity(.6)),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                                  child: Text(
+                                    data.badge!,
+                                    style: const TextStyle(
+                                      color: _HomeScreenState._gold,
+                                      fontSize: 8,
+                                      letterSpacing: 1.1,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          Align(
+                            alignment: Alignment.bottomCenter,
+                            child: Transform.translate(
+                              offset: Offset(0, compact ? 13 : 16),
+                              child: Container(
+                                width: compact ? 42 : 50,
+                                height: compact ? 42 : 50,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xF038302A),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: _HomeScreenState._gold),
+                                ),
+                                child: Icon(data.icon, color: _HomeScreenState._gold, size: compact ? 22 : 26),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: compact ? 18 : 25),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 5),
+                      child: Text(
+                        data.title,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: compact ? 13 : 15,
+                          fontWeight: FontWeight.w600,
+                          height: 1.2,
                         ),
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 28),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 7),
-                  child: Text(
-                    data.title,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      height: 1.25,
                     ),
-                  ),
-                ),
-                const SizedBox(height: 7),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 5),
-                  child: Text(
-                    data.subtitle,
-                    textAlign: TextAlign.center,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(.86),
-                      fontSize: 11.5,
-                      height: 1.35,
+                    SizedBox(height: compact ? 3 : 6),
+                    if (!compact)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 5),
+                        child: Text(
+                          data.subtitle,
+                          textAlign: TextAlign.center,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(color: Colors.white.withOpacity(.84), fontSize: 10.5, height: 1.3),
+                        ),
+                      ),
+                    const Spacer(),
+                    Container(
+                      width: compact ? 30 : 36,
+                      height: compact ? 30 : 36,
+                      margin: EdgeInsets.only(bottom: compact ? 7 : 10),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: _HomeScreenState._gold.withOpacity(.8)),
+                      ),
+                      child: const Icon(Icons.chevron_right, color: _HomeScreenState._gold),
                     ),
-                  ),
+                  ],
                 ),
-                const Spacer(),
-                Container(
-                  width: 38,
-                  height: 38,
-                  margin: const EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: _HomeScreenState._gold.withOpacity(.8)),
-                  ),
-                  child: const Icon(Icons.chevron_right, color: _HomeScreenState._gold),
-                ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -395,9 +446,7 @@ class _EmptyHomeCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: _HomeScreenState._gold.withOpacity(.3)),
       ),
-      child: const Center(
-        child: Icon(Icons.pets, color: Colors.white24, size: 36),
-      ),
+      child: const Center(child: Icon(Icons.pets, color: Colors.white24, size: 36)),
     );
   }
 }
@@ -409,8 +458,7 @@ class _AdBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
-      child: AspectRatio(
-        aspectRatio: 873 / 168,
+      child: SizedBox.expand(
         child: Image.asset('assets/home/ad_banner.jpg', fit: BoxFit.cover),
       ),
     );
@@ -427,13 +475,12 @@ class _PageIndicator extends StatelessWidget {
   Widget build(BuildContext context) {
     Widget button(IconData icon, VoidCallback? onPressed) {
       return IconButton(
+        visualDensity: VisualDensity.compact,
         onPressed: onPressed,
         icon: Icon(icon),
         color: onPressed == null ? Colors.white24 : _HomeScreenState._gold,
         style: IconButton.styleFrom(
-          side: BorderSide(
-            color: onPressed == null ? Colors.white12 : _HomeScreenState._gold.withOpacity(.8),
-          ),
+          side: BorderSide(color: onPressed == null ? Colors.white12 : _HomeScreenState._gold.withOpacity(.8)),
         ),
       );
     }
@@ -441,18 +488,15 @@ class _PageIndicator extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Container(width: 58, height: 1, color: Colors.white24),
-        const SizedBox(width: 14),
+        Container(width: 42, height: 1, color: Colors.white24),
+        const SizedBox(width: 10),
         button(Icons.chevron_left, onPrevious),
-        const SizedBox(width: 14),
-        Text(
-          '${page + 1} / 3',
-          style: const TextStyle(color: Colors.white, fontSize: 16),
-        ),
-        const SizedBox(width: 14),
+        const SizedBox(width: 10),
+        Text('${page + 1} / 3', style: const TextStyle(color: Colors.white, fontSize: 16)),
+        const SizedBox(width: 10),
         button(Icons.chevron_right, onNext),
-        const SizedBox(width: 14),
-        Container(width: 58, height: 1, color: Colors.white24),
+        const SizedBox(width: 10),
+        Container(width: 42, height: 1, color: Colors.white24),
       ],
     );
   }

@@ -1,11 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:gal/gal.dart';
 
 import '../models/travel_memory.dart';
 import '../services/app_repository.dart';
-import '../widgets/app_scaffold.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key, required this.repository});
@@ -16,6 +16,10 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProviderStateMixin {
+  static const _gold = Color(0xFFE6C28D);
+  static const _background = Color(0xFF171412);
+  static const _panel = Color(0xE625211E);
+
   late final TabController _tabs = TabController(length: 3, vsync: this);
 
   @override
@@ -26,119 +30,296 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
 
   @override
   Widget build(BuildContext context) {
-    return AppScaffold(
-      title: '旅の思い出を振り返る',
-      child: Column(
-        children: [
-          TabBar(
-            controller: _tabs,
-            tabs: const [Tab(text: '一覧'), Tab(text: '日本地図'), Tab(text: '年月')],
-          ),
-          Expanded(
-            child: AnimatedBuilder(
-              animation: widget.repository,
-              builder: (_, __) => TabBarView(
-                controller: _tabs,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
+      child: Scaffold(
+        backgroundColor: _background,
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            Positioned.fill(
+              child: Image.asset(
+                'assets/home/hero.jpg',
+                fit: BoxFit.cover,
+                alignment: Alignment.topCenter,
+              ),
+            ),
+            const Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0x99211916), Color(0xF2171412), Color(0xFF171412)],
+                    stops: [0, .34, .72],
+                  ),
+                ),
+              ),
+            ),
+            SafeArea(
+              child: Column(
                 children: [
-                  _MemoryList(memories: widget.repository.memories),
-                  _PrefectureMap(memories: widget.repository.memories),
-                  _MonthMemories(memories: widget.repository.memories),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(10, 8, 16, 8),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          icon: const Icon(Icons.chevron_left, color: Colors.white, size: 32),
+                        ),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Text(
+                                '旅の思い出を振り返る',
+                                style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w700),
+                              ),
+                              SizedBox(height: 2),
+                              Text(
+                                'MEMORIES OF JOURNEYS',
+                                style: TextStyle(color: _gold, fontSize: 9, letterSpacing: 2.1),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 48),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xC4211B18),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: _gold.withOpacity(.72)),
+                      ),
+                      child: TabBar(
+                        controller: _tabs,
+                        indicatorSize: TabBarIndicatorSize.tab,
+                        indicator: BoxDecoration(
+                          color: _gold.withOpacity(.18),
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: _gold.withOpacity(.7)),
+                        ),
+                        dividerColor: Colors.transparent,
+                        labelColor: _gold,
+                        unselectedLabelColor: Colors.white70,
+                        labelStyle: const TextStyle(fontWeight: FontWeight.w700),
+                        tabs: const [
+                          Tab(icon: Icon(Icons.photo_album_outlined, size: 19), text: '一覧'),
+                          Tab(icon: Icon(Icons.map_outlined, size: 19), text: '日本地図'),
+                          Tab(icon: Icon(Icons.calendar_month_outlined, size: 19), text: '年月'),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: AnimatedBuilder(
+                      animation: widget.repository,
+                      builder: (_, __) => TabBarView(
+                        controller: _tabs,
+                        children: [
+                          _MemoryList(repository: widget.repository, memories: widget.repository.memories),
+                          _PrefectureMap(repository: widget.repository, memories: widget.repository.memories),
+                          _MonthMemories(repository: widget.repository, memories: widget.repository.memories),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
 class _MemoryList extends StatelessWidget {
-  const _MemoryList({required this.memories, this.emptyText = 'まだ旅の記録がありません。'});
+  const _MemoryList({required this.repository, required this.memories, this.emptyText = 'まだ旅の記録がありません。'});
+  final AppRepository repository;
   final List<TravelMemory> memories;
   final String emptyText;
 
   @override
   Widget build(BuildContext context) {
-    if (memories.isEmpty) return Center(child: Text(emptyText));
+    if (memories.isEmpty) {
+      return _EmptyMemory(message: emptyText);
+    }
     final sorted = [...memories]..sort((a, b) => b.visitedAt.compareTo(a.visitedAt));
     return ListView.builder(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.fromLTRB(14, 4, 14, 24),
       itemCount: sorted.length,
-      itemBuilder: (context, i) => _MemoryCard(memory: sorted[i]),
+      itemBuilder: (context, i) => _MemoryCard(repository: repository, memory: sorted[i]),
     );
   }
 }
 
 class _MemoryCard extends StatelessWidget {
-  const _MemoryCard({required this.memory});
+  const _MemoryCard({required this.repository, required this.memory});
+  final AppRepository repository;
   final TravelMemory memory;
+
+  Future<bool> _confirm(BuildContext context, String title, String message) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(title),
+            content: Text(message),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('キャンセル')),
+              FilledButton(
+                style: FilledButton.styleFrom(backgroundColor: Colors.red.shade700),
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('削除'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  Future<void> _deleteMemory(BuildContext context) async {
+    final ok = await _confirm(
+      context,
+      '訪問場所を削除しますか？',
+      '「${memory.placeName}」の記録と、この場所に保存されている写真を削除します。',
+    );
+    if (!ok) return;
+    await repository.deleteMemory(memory.id);
+  }
+
+  Future<void> _deletePhoto(BuildContext context, String path) async {
+    final ok = await _confirm(context, '写真を削除しますか？', 'この写真だけを旅の記録から削除します。');
+    if (!ok) return;
+    await repository.deletePhotoFromMemory(memory.id, path);
+  }
 
   @override
   Widget build(BuildContext context) {
     final photos = memory.photoPaths.where((p) => File(p).existsSync()).toList();
-    return Card(
-      child: ExpansionTile(
-        leading: photos.isNotEmpty
-            ? ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.file(File(photos.first), width: 54, height: 54, fit: BoxFit.cover),
-              )
-            : const CircleAvatar(child: Icon(Icons.place)),
-        title: Text(memory.placeName),
-        subtitle: Text('${memory.prefecture} ・ ${_date(memory.visitedAt)}'),
-        childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-        children: [
-          if (memory.memo.isNotEmpty) ...[
-            Align(alignment: Alignment.centerLeft, child: Text(memory.memo)),
-            const SizedBox(height: 10),
-          ],
-          if (photos.isNotEmpty)
-            SizedBox(
-              height: 150,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: photos.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
-                itemBuilder: (context, index) {
-                  final path = photos[index];
-                  return GestureDetector(
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => _PhotoViewer(paths: photos, initialIndex: index),
-                      ),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Stack(
-                        children: [
-                          Image.file(File(path), width: 150, height: 150, fit: BoxFit.cover),
-                          const Positioned(
-                            right: 6,
-                            bottom: 6,
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
-                              child: Padding(
-                                padding: EdgeInsets.all(5),
-                                child: Icon(Icons.fullscreen, color: Colors.white, size: 18),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xE628211D),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE6C28D).withOpacity(.48)),
+        boxShadow: const [BoxShadow(color: Colors.black38, blurRadius: 12, offset: Offset(0, 6))],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          iconColor: const Color(0xFFE6C28D),
+          collapsedIconColor: Colors.white70,
+          tilePadding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
+          childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 14),
+          leading: photos.isNotEmpty
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Image.file(File(photos.first), width: 56, height: 56, fit: BoxFit.cover),
+                )
+              : Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF3B3029),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFFE6C28D).withOpacity(.45)),
+                  ),
+                  child: const Icon(Icons.place_outlined, color: Color(0xFFE6C28D)),
+                ),
+          title: Text(memory.placeName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+          subtitle: Text(
+            '${memory.prefecture} ・ ${_date(memory.visitedAt)}',
+            style: const TextStyle(color: Colors.white70),
+          ),
+          trailing: IconButton(
+            tooltip: 'この場所を削除',
+            onPressed: () => _deleteMemory(context),
+            icon: const Icon(Icons.delete_outline, color: Color(0xFFE6C28D)),
+          ),
+          children: [
+            if (memory.memo.isNotEmpty) ...[
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(memory.memo, style: const TextStyle(color: Colors.white70)),
+              ),
+              const SizedBox(height: 10),
+            ],
+            if (photos.isEmpty)
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text('写真はまだありません。', style: TextStyle(color: Colors.white54)),
+              ),
+            if (photos.isNotEmpty)
+              SizedBox(
+                height: 154,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: photos.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  itemBuilder: (context, index) {
+                    final path = photos[index];
+                    return Stack(
+                      children: [
+                        GestureDetector(
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => _PhotoViewer(paths: photos, initialIndex: index),
+                            ),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.file(File(path), width: 150, height: 150, fit: BoxFit.cover),
+                          ),
+                        ),
+                        Positioned(
+                          right: 6,
+                          top: 6,
+                          child: Material(
+                            color: Colors.black54,
+                            shape: const CircleBorder(),
+                            child: InkWell(
+                              customBorder: const CircleBorder(),
+                              onTap: () => _deletePhoto(context, path),
+                              child: const Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Icon(Icons.delete_outline, color: Colors.white, size: 18),
                               ),
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
+                        ),
+                        const Positioned(
+                          right: 6,
+                          bottom: 6,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
+                            child: Padding(
+                              padding: EdgeInsets.all(5),
+                              child: Icon(Icons.fullscreen, color: Colors.white, size: 18),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
 class _PrefectureMap extends StatelessWidget {
-  const _PrefectureMap({required this.memories});
+  const _PrefectureMap({required this.repository, required this.memories});
+  final AppRepository repository;
   final List<TravelMemory> memories;
 
   static const prefectures = [
@@ -152,25 +333,26 @@ class _PrefectureMap extends StatelessWidget {
       counts[m.prefecture] = (counts[m.prefecture] ?? 0) + 1;
     }
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(14, 4, 14, 24),
       children: [
-        const Text(
-          '訪問済み都道府県を色付きで表示します。訪れた県をタップすると、その県で訪れた場所と写真を確認できます。',
-          style: TextStyle(fontSize: 13),
+        _TravelHeader(
+          icon: Icons.map_outlined,
+          title: '日本を旅した足あと',
+          subtitle: '訪れた都道府県が金色に灯ります。タップすると、その土地の写真と思い出を開けます。',
         ),
         const SizedBox(height: 12),
         GridView.count(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           crossAxisCount: 3,
-          childAspectRatio: 2.2,
-          mainAxisSpacing: 6,
-          crossAxisSpacing: 6,
+          childAspectRatio: 2.1,
+          mainAxisSpacing: 7,
+          crossAxisSpacing: 7,
           children: prefectures.map((prefecture) {
             final count = counts[prefecture] ?? 0;
             final visited = count > 0;
             return InkWell(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(12),
               onTap: !visited
                   ? null
                   : () {
@@ -179,26 +361,31 @@ class _PrefectureMap extends StatelessWidget {
                         context: context,
                         isScrollControlled: true,
                         useSafeArea: true,
+                        backgroundColor: const Color(0xFF171412),
                         builder: (context) => FractionallySizedBox(
-                          heightFactor: .88,
+                          heightFactor: .9,
                           child: Column(
                             children: [
                               Padding(
-                                padding: const EdgeInsets.fromLTRB(20, 18, 12, 8),
+                                padding: const EdgeInsets.fromLTRB(20, 16, 10, 8),
                                 child: Row(
                                   children: [
                                     Expanded(
                                       child: Text(
                                         '$prefectureの思い出',
-                                        style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                                        style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w700),
                                       ),
                                     ),
-                                    IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
+                                    IconButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      icon: const Icon(Icons.close, color: Colors.white),
+                                    ),
                                   ],
                                 ),
                               ),
                               Expanded(
                                 child: _MemoryList(
+                                  repository: repository,
                                   memories: filtered,
                                   emptyText: '$prefectureの記録はありません。',
                                 ),
@@ -208,17 +395,24 @@ class _PrefectureMap extends StatelessWidget {
                         ),
                       );
                     },
-              child: Container(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
                 decoration: BoxDecoration(
-                  color: visited
-                      ? Theme.of(context).colorScheme.primaryContainer
-                      : Theme.of(context).colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(10),
+                  color: visited ? const Color(0xFF5A432E) : const Color(0xB92B2521),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: visited ? const Color(0xFFE6C28D) : Colors.white12,
+                  ),
                 ),
                 alignment: Alignment.center,
                 child: Text(
                   visited ? '$prefecture  $count' : prefecture,
-                  style: TextStyle(fontWeight: visited ? FontWeight.bold : FontWeight.normal),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: visited ? const Color(0xFFFFE4B8) : Colors.white54,
+                    fontWeight: visited ? FontWeight.bold : FontWeight.normal,
+                    fontSize: 12,
+                  ),
                 ),
               ),
             );
@@ -230,7 +424,8 @@ class _PrefectureMap extends StatelessWidget {
 }
 
 class _MonthMemories extends StatefulWidget {
-  const _MonthMemories({required this.memories});
+  const _MonthMemories({required this.repository, required this.memories});
+  final AppRepository repository;
   final List<TravelMemory> memories;
 
   @override
@@ -250,7 +445,7 @@ class _MonthMemoriesState extends State<_MonthMemories> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.memories.isEmpty) return const Center(child: Text('まだ旅の記録がありません。'));
+    if (widget.memories.isEmpty) return const _EmptyMemory(message: 'まだ旅の記録がありません。');
     _ensureSelection();
     final years = widget.memories.map((e) => e.visitedAt.year).toSet().toList()..sort((a, b) => b.compareTo(a));
     final filtered = widget.memories.where((m) => m.visitedAt.year == _year && m.visitedAt.month == _month).toList();
@@ -258,38 +453,156 @@ class _MonthMemoriesState extends State<_MonthMemories> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
-          child: Row(
+          padding: const EdgeInsets.fromLTRB(14, 4, 14, 8),
+          child: Column(
             children: [
-              Expanded(
-                child: DropdownButtonFormField<int>(
-                  value: _year,
-                  decoration: const InputDecoration(labelText: '年'),
-                  items: years.map((y) => DropdownMenuItem(value: y, child: Text('$y年'))).toList(),
-                  onChanged: (value) => setState(() => _year = value),
-                ),
+              const _TravelHeader(
+                icon: Icons.calendar_month_outlined,
+                title: '季節をめくるように',
+                subtitle: '年月を選んで、その頃の旅をまとめて振り返れます。',
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: DropdownButtonFormField<int>(
-                  value: _month,
-                  decoration: const InputDecoration(labelText: '月'),
-                  items: List.generate(12, (i) => i + 1)
-                      .map((m) => DropdownMenuItem(value: m, child: Text('$m月')))
-                      .toList(),
-                  onChanged: (value) => setState(() => _month = value),
-                ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: _DarkDropdown<int>(
+                      value: _year,
+                      label: '年',
+                      items: years.map((y) => DropdownMenuItem(value: y, child: Text('$y年'))).toList(),
+                      onChanged: (value) => setState(() => _year = value),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _DarkDropdown<int>(
+                      value: _month,
+                      label: '月',
+                      items: List.generate(12, (i) => i + 1)
+                          .map((m) => DropdownMenuItem(value: m, child: Text('$m月')))
+                          .toList(),
+                      onChanged: (value) => setState(() => _month = value),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
         ),
         Expanded(
           child: _MemoryList(
+            repository: widget.repository,
             memories: filtered,
             emptyText: '${_year ?? ''}年${_month ?? ''}月の記録はありません。',
           ),
         ),
       ],
+    );
+  }
+}
+
+class _DarkDropdown<T> extends StatelessWidget {
+  const _DarkDropdown({required this.value, required this.label, required this.items, required this.onChanged});
+  final T? value;
+  final String label;
+  final List<DropdownMenuItem<T>> items;
+  final ValueChanged<T?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButtonFormField<T>(
+      value: value,
+      dropdownColor: const Color(0xFF2A231F),
+      style: const TextStyle(color: Colors.white),
+      iconEnabledColor: const Color(0xFFE6C28D),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: Colors.white70),
+        filled: true,
+        fillColor: const Color(0xCC28211D),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Color(0x88E6C28D)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Color(0xFFE6C28D)),
+        ),
+      ),
+      items: items,
+      onChanged: onChanged,
+    );
+  }
+}
+
+class _TravelHeader extends StatelessWidget {
+  const _TravelHeader({required this.icon, required this.title, required this.subtitle});
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xD925201D),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0x66E6C28D)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: const Color(0xFF40342B),
+              shape: BoxShape.circle,
+              border: Border.all(color: const Color(0xFFE6C28D)),
+            ),
+            child: Icon(icon, color: const Color(0xFFE6C28D)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16)),
+                const SizedBox(height: 3),
+                Text(subtitle, style: const TextStyle(color: Colors.white70, fontSize: 12, height: 1.35)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptyMemory extends StatelessWidget {
+  const _EmptyMemory({required this.message});
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: const Color(0xC925201D),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0x66E6C28D)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.luggage_outlined, color: Color(0xFFE6C28D), size: 40),
+            const SizedBox(height: 10),
+            Text(message, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70)),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -319,10 +632,7 @@ class _PhotoViewerState extends State<_PhotoViewer> {
     setState(() => _saving = true);
     try {
       final bytes = await File(widget.paths[_index]).readAsBytes();
-      await Gal.putImageBytes(
-        bytes,
-        name: 'nekotomatatabi_${DateTime.now().millisecondsSinceEpoch}',
-      );
+      await Gal.putImageBytes(bytes, name: 'nekotomatatabi_${DateTime.now().millisecondsSinceEpoch}');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('写真を保存しました。')));
       }
@@ -358,12 +668,10 @@ class _PhotoViewerState extends State<_PhotoViewer> {
         itemCount: widget.paths.length,
         onPageChanged: (value) => setState(() => _index = value),
         itemBuilder: (context, index) {
-          return Center(
-            child: InteractiveViewer(
-              minScale: 1,
-              maxScale: 5,
-              child: Image.file(File(widget.paths[index]), fit: BoxFit.contain),
-            ),
+          return InteractiveViewer(
+            minScale: 1,
+            maxScale: 5,
+            child: Center(child: Image.file(File(widget.paths[index]), fit: BoxFit.contain)),
           );
         },
       ),

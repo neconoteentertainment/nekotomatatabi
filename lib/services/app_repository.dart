@@ -44,12 +44,33 @@ class AppRepository extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> deleteMemory(String memoryId) async {
-    _memories = _memories.where((e) => e.id != memoryId).toList();
+  Future<void> deletePhotoFromMemory(String memoryId, String path) async {
+    _memories = _memories.map((m) {
+      if (m.id != memoryId) return m;
+      return m.copyWith(photoPaths: m.photoPaths.where((p) => p != path).toList());
+    }).toList();
     await _storage.saveMemories(_memories);
+    try {
+      final file = File(path);
+      if (await file.exists()) await file.delete();
+    } catch (_) {}
     notifyListeners();
   }
 
+  Future<void> deleteMemory(String memoryId) async {
+    final target = _memories.where((e) => e.id == memoryId).toList();
+    _memories = _memories.where((e) => e.id != memoryId).toList();
+    await _storage.saveMemories(_memories);
+    for (final memory in target) {
+      for (final path in memory.photoPaths) {
+        try {
+          final file = File(path);
+          if (await file.exists()) await file.delete();
+        } catch (_) {}
+      }
+    }
+    notifyListeners();
+  }
 
   Future<void> saveTravelPlan(TravelPlan plan) async {
     final index = _travelPlans.indexWhere((e) => e.id == plan.id);
@@ -75,7 +96,9 @@ class AppRepository extends ChangeNotifier {
     _stampPaths[index] = saved;
     await _storage.saveStampPaths(_stampPaths);
     if (old != null && old != saved) {
-      try { await File(old).delete(); } catch (_) {}
+      try {
+        await File(old).delete();
+      } catch (_) {}
     }
     notifyListeners();
   }
@@ -85,7 +108,9 @@ class AppRepository extends ChangeNotifier {
     _stampPaths[index] = null;
     await _storage.saveStampPaths(_stampPaths);
     if (old != null) {
-      try { await File(old).delete(); } catch (_) {}
+      try {
+        await File(old).delete();
+      } catch (_) {}
     }
     notifyListeners();
   }
