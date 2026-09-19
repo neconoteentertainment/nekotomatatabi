@@ -14,9 +14,33 @@ Future<void> main() async {
   runApp(NekotoMataTabiApp(repository: repository));
 }
 
-class NekotoMataTabiApp extends StatelessWidget {
+class NekotoMataTabiApp extends StatefulWidget {
   const NekotoMataTabiApp({super.key, required this.repository});
   final AppRepository repository;
+
+  @override
+  State<NekotoMataTabiApp> createState() => _NekotoMataTabiAppState();
+}
+
+class _NekotoMataTabiAppState extends State<NekotoMataTabiApp>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    widget.repository.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    widget.repository.setAppActive(state == AppLifecycleState.resumed);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +96,7 @@ class NekotoMataTabiApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: HomeScreen(repository: repository),
+      home: HomeScreen(repository: widget.repository),
     );
   }
 }

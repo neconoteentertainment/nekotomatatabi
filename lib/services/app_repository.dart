@@ -2,32 +2,97 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 
+import '../models/local_item.dart';
 import '../models/travel_memory.dart';
 import '../models/travel_plan.dart';
+import 'audio_service.dart';
 import 'storage_service.dart';
 
 class AppRepository extends ChangeNotifier {
-  AppRepository(this._storage);
+  AppRepository(this._storage) : _audio = AppAudioService();
 
   final StorageService _storage;
+  final AppAudioService _audio;
   List<TravelMemory> _memories = [];
   List<String?> _stampPaths = List<String?>.filled(4, null);
   List<TravelPlan> _travelPlans = [];
   bool _ready = false;
+  bool _bgmEnabled = true;
+  String _bgmTrack = 'umibe';
+
+  static const _testBasePoints = 30;
 
   List<TravelMemory> get memories => List.unmodifiable(_memories);
   List<String?> get stampPaths => List.unmodifiable(_stampPaths);
   List<TravelPlan> get travelPlans => List.unmodifiable(_travelPlans);
   bool get ready => _ready;
-  int get points => _memories.length;
+  bool get bgmEnabled => _bgmEnabled;
+  String get bgmTrack => _bgmTrack;
+
+  int get uniqueVisitCount => _uniqueMemories(_memories).length;
+
+  int pointsForPrefecture(String prefecture) {
+    final count = _uniqueMemories(
+      _memories.where((m) => m.prefecture == prefecture),
+    ).length;
+    // テスト期間中は仕様書どおり東海4県を30Pから開始。リリース時は0へ変更する。
+    final testBonus = tokaiPrefectures.contains(prefecture) ? _testBasePoints : 0;
+    return testBonus + count;
+  }
+
+  bool isLocalItemUnlocked(LocalItem item) =>
+      pointsForPrefecture(item.prefecture) >= item.threshold;
+
+  List<LocalItem> unlockedLocalItems({String? prefecture}) => localItems
+      .where((item) =>
+          (prefecture == null || item.prefecture == prefecture) &&
+          isLocalItemUnlocked(item))
+      .toList(growable: false);
+
+  Iterable<TravelMemory> _uniqueMemories(Iterable<TravelMemory> source) sync* {
+    final seen = <String>{};
+    for (final memory in source) {
+      final name = memory.placeName.trim().replaceAll(RegExp(r'\s+'), '');
+      final key = '${memory.prefecture}|$name';
+      if (seen.add(key)) yield memory;
+    }
+  }
 
   Future<void> initialize() async {
     _memories = await _storage.loadMemories();
     _stampPaths = await _storage.loadStampPaths();
     _travelPlans = await _storage.loadTravelPlans();
+    _bgmEnabled = await _storage.loadBgmEnabled();
+    _bgmTrack = await _storage.loadBgmTrack();
+    await _audio.configure(
+      enabled: _bgmEnabled,
+      asset: _bgmAsset(_bgmTrack),
+    );
     _ready = true;
     notifyListeners();
   }
+
+  String _bgmAsset(String track) => switch (track) {
+        'odayaka' => 'bgm/odayakana_asa.mp3',
+        _ => 'bgm/umibe_no_asa.mp3',
+      };
+
+  Future<void> setBgmEnabled(bool enabled) async {
+    _bgmEnabled = enabled;
+    await _storage.saveBgmEnabled(enabled);
+    await _audio.setEnabled(enabled);
+    notifyListeners();
+  }
+
+  Future<void> setBgmTrack(String track) async {
+    if (track != 'umibe' && track != 'odayaka') return;
+    _bgmTrack = track;
+    await _storage.saveBgmTrack(track);
+    await _audio.setTrack(_bgmAsset(track));
+    notifyListeners();
+  }
+
+  Future<void> setAppActive(bool active) => _audio.setAppActive(active);
 
   Future<void> addMemory(TravelMemory memory) async {
     _memories = [memory, ..._memories];
@@ -113,5 +178,11 @@ class AppRepository extends ChangeNotifier {
       } catch (_) {}
     }
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _audio.dispose();
+    super.dispose();
   }
 }

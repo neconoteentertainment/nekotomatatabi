@@ -11,23 +11,31 @@ import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
 
+import '../models/local_item.dart';
 import '../services/app_repository.dart';
 import '../services/storage_service.dart';
 
 enum _OverlayKind { stamp, text }
 
 class _OverlayItem {
-  _OverlayItem.stamp({required this.id, required this.stampIndex, required this.offset})
-      : kind = _OverlayKind.stamp,
-        text = null;
+  _OverlayItem.stamp({
+    required this.id,
+    required this.offset,
+    this.stampIndex,
+    this.assetPath,
+  })  : kind = _OverlayKind.stamp,
+        text = null,
+        assert(stampIndex != null || assetPath != null);
 
   _OverlayItem.text({required this.id, required this.text, required this.offset})
       : kind = _OverlayKind.text,
-        stampIndex = null;
+        stampIndex = null,
+        assetPath = null;
 
   final int id;
   final _OverlayKind kind;
   final int? stampIndex;
+  final String? assetPath;
   final String? text;
   final GlobalKey repaintKey = GlobalKey();
   Offset offset;
@@ -252,6 +260,101 @@ class _CameraScreenState extends State<CameraScreen> {
     });
   }
 
+  void _addLocalItemStamp(LocalItem localItem) {
+    final item = _OverlayItem.stamp(
+      id: ++_overlaySerial,
+      assetPath: localItem.assetPath,
+      offset: Offset(70.0 + (_overlays.length % 3) * 24, 120.0 + (_overlays.length % 3) * 24),
+    );
+    setState(() {
+      _overlays.add(item);
+      _selectedOverlayId = item.id;
+      _showStampPanel = false;
+    });
+  }
+
+  Future<void> _chooseLocalItemStamp() async {
+    final region = await showDialog<String>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: const Text('地域を選択'),
+        children: [
+          for (final value in localItemRegions)
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(context, value),
+              child: ListTile(
+                leading: const Icon(Icons.landscape_outlined),
+                title: Text(value),
+                subtitle: const Text('名産スタンプ'),
+              ),
+            ),
+        ],
+      ),
+    );
+    if (region == null || !mounted) return;
+
+    final prefectures = localItems
+        .where((e) => e.region == region)
+        .map((e) => e.prefecture)
+        .toSet()
+        .toList();
+    final prefecture = await showDialog<String>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: Text('$region → 都道府県'),
+        children: [
+          for (final value in prefectures)
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(context, value),
+              child: ListTile(
+                leading: const Icon(Icons.place_outlined),
+                title: Text(value),
+                trailing: Text('${widget.repository.pointsForPrefecture(value)}P'),
+              ),
+            ),
+        ],
+      ),
+    );
+    if (prefecture == null || !mounted) return;
+
+    final unlocked = widget.repository.unlockedLocalItems(prefecture: prefecture);
+    if (unlocked.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$prefecture で使用できる名産スタンプはまだありません。')),
+      );
+      return;
+    }
+    final selected = await showDialog<LocalItem>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('$prefecture のスタンプ'),
+        content: SizedBox(
+          width: 420,
+          child: ListView.separated(
+            shrinkWrap: true,
+            itemCount: unlocked.length,
+            separatorBuilder: (_, __) => const Divider(height: 1),
+            itemBuilder: (context, index) {
+              final item = unlocked[index];
+              return ListTile(
+                leading: SizedBox(
+                  width: 48,
+                  height: 48,
+                  child: Image.asset(item.assetPath, fit: BoxFit.contain),
+                ),
+                title: Text(item.name),
+                subtitle: Text('${item.threshold}P'),
+                onTap: () => Navigator.pop(context, item),
+              );
+            },
+          ),
+        ),
+        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('閉じる'))],
+      ),
+    );
+    if (selected != null && mounted) _addLocalItemStamp(selected);
+  }
+
   Future<void> _addText() async {
     final c = TextEditingController(text: 'ねことまた旅');
     final value = await showDialog<String>(
@@ -293,9 +396,15 @@ class _CameraScreenState extends State<CameraScreen> {
         child: Text(item.text!, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black)),
       );
     }
-    final path = widget.repository.stampPaths[item.stampIndex!];
-    if (path != null && File(path).existsSync()) {
-      return Image.file(File(path), width: 150, fit: BoxFit.contain);
+    if (item.assetPath != null) {
+      return Image.asset(item.assetPath!, width: 150, fit: BoxFit.contain);
+    }
+    final stampIndex = item.stampIndex;
+    if (stampIndex != null) {
+      final path = widget.repository.stampPaths[stampIndex];
+      if (path != null && File(path).existsSync()) {
+        return Image.file(File(path), width: 150, fit: BoxFit.contain);
+      }
     }
     return const SizedBox(width: 1, height: 1);
   }
@@ -510,6 +619,12 @@ class _CameraScreenState extends State<CameraScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                             children: [
                               ActionChip(avatar: const Icon(Icons.text_fields), label: const Text('文字追加'), onPressed: () async { await _addText(); if (mounted) setState(() => _showStampPanel = false); }),
+                              const SizedBox(width: 8),
+                              ActionChip(
+                                avatar: const Icon(Icons.card_giftcard_outlined),
+                                label: const Text('ご当地'),
+                                onPressed: _chooseLocalItemStamp,
+                              ),
                               const SizedBox(width: 8),
                               ...List.generate(4, (i) {
                                 final path = widget.repository.stampPaths[i];

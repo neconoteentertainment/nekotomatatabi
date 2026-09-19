@@ -72,8 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Padding(
                         padding: EdgeInsets.fromLTRB(16, compact ? 6 : 10, 16, 0),
                         child: _VisitBar(
-                          visits: repository.memories.length,
-                          points: repository.points,
+                          visits: repository.uniqueVisitCount,
                           compact: compact,
                         ),
                       ),
@@ -133,7 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   icon: Icons.tune,
                                   title: '設定',
                                   subtitle: 'アプリの情報や\n各種設定を確認',
-                                  onTap: () => _push(const SettingsScreen()),
+                                  onTap: () => _push(SettingsScreen(repository: repository)),
                                 ),
                               ],
                             ),
@@ -219,9 +218,8 @@ class _HeroImage extends StatelessWidget {
 }
 
 class _VisitBar extends StatelessWidget {
-  const _VisitBar({required this.visits, required this.points, required this.compact});
+  const _VisitBar({required this.visits, required this.compact});
   final int visits;
-  final int points;
   final bool compact;
 
   @override
@@ -238,18 +236,12 @@ class _VisitBar extends StatelessWidget {
         children: [
           Icon(Icons.pets, color: _HomeScreenState._gold, size: compact ? 23 : 27),
           const SizedBox(width: 10),
-          Text(
-            '訪問 $visits か所',
-            style: TextStyle(color: Colors.white, fontSize: compact ? 15 : 18),
-          ),
-          const Spacer(),
-          Container(width: 1, height: compact ? 22 : 28, color: Colors.white24),
-          const SizedBox(width: 16),
-          const Icon(Icons.map_outlined, color: _HomeScreenState._gold),
-          const SizedBox(width: 8),
-          Text(
-            '${points}P',
-            style: TextStyle(color: Colors.white, fontSize: compact ? 15 : 18, fontWeight: FontWeight.w600),
+          Expanded(
+            child: Text(
+              '今までに訪れた観光地  $visits 箇所',
+              style: TextStyle(color: Colors.white, fontSize: compact ? 14 : 17, fontWeight: FontWeight.w600),
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),

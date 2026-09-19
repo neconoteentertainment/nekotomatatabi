@@ -12,6 +12,8 @@ class StorageService {
   static const _memoriesKey = 'travel_memories_v1';
   static const _stampPathsKey = 'stamp_paths_v1';
   static const _travelPlansKey = 'travel_plans_v1';
+  static const _bgmEnabledKey = 'bgm_enabled_v1';
+  static const _bgmTrackKey = 'bgm_track_v1';
 
   Future<List<TravelMemory>> loadMemories() async {
     final prefs = await SharedPreferences.getInstance();
@@ -60,6 +62,27 @@ class StorageService {
       _travelPlansKey,
       jsonEncode(plans.map((e) => e.toJson()).toList()),
     );
+  }
+
+
+  Future<bool> loadBgmEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_bgmEnabledKey) ?? true;
+  }
+
+  Future<String> loadBgmTrack() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_bgmTrackKey) ?? 'umibe';
+  }
+
+  Future<void> saveBgmEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_bgmEnabledKey, enabled);
+  }
+
+  Future<void> saveBgmTrack(String track) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_bgmTrackKey, track);
   }
 
   Future<List<String?>> loadStampPaths() async {

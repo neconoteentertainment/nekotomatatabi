@@ -101,7 +101,7 @@ class _RecordScreenState extends State<RecordScreen> {
       _selectedMemoryId = memory.id;
       _places = [];
     });
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${place.name} を記録しました（+1P）')));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${place.name} を記録しました。')));
   }
 
   Future<void> _manualRecord() async {
