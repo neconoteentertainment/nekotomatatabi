@@ -112,30 +112,27 @@ class _HomeScreenState extends State<HomeScreen> {
                             _MenuPage.cards(
                               cards: [
                                 _HomeCardData(
-                                  image: 'assets/home/hero.jpg',
-                                  imageAlignment: const Alignment(0, -0.15),
+                                  image: 'assets/home/card_stamp.png',
+                                  imageAlignment: Alignment.center,
                                   icon: Icons.pets,
                                   title: 'スタンプ\nエディット',
                                   subtitle: 'お気に入りの猫画像を\n4個まで登録',
-                                  badge: 'MY CAT',
                                   onTap: () => _push(StampEditorScreen(repository: repository)),
                                 ),
                                 _HomeCardData(
-                                  image: 'assets/home/card_record.jpg',
-                                  imageAlignment: Alignment.topCenter,
+                                  image: 'assets/home/card_local.png',
+                                  imageAlignment: Alignment.center,
                                   icon: Icons.card_giftcard_outlined,
                                   title: 'ご当地アイテム\nを確認',
                                   subtitle: '旅先で集めたポイントで\nご当地アイテムを解放',
-                                  badge: 'LOCAL',
                                   onTap: () => _push(ItemScreen(repository: repository)),
                                 ),
                                 _HomeCardData(
-                                  image: 'assets/home/ad_banner.jpg',
-                                  imageAlignment: Alignment.centerRight,
+                                  image: 'assets/home/card_settings.png',
+                                  imageAlignment: Alignment.center,
                                   icon: Icons.tune,
                                   title: '設定',
                                   subtitle: 'アプリの情報や\n各種設定を確認',
-                                  badge: 'SETTING',
                                   onTap: () => _push(const SettingsScreen()),
                                 ),
                               ],
@@ -144,7 +141,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               cards: [
                                 _HomeFeatureCard(
                                   data: _HomeCardData(
-                                    image: 'assets/home/card_history.jpg',
+                                    image: 'assets/home/card_help.png',
                                     icon: Icons.help_outline,
                                     title: 'アプリの\n使用方法',
                                     subtitle: 'ねことまた旅の\n使い方を見る',
@@ -156,7 +153,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                                 _HomeFeatureCard(
                                   data: _HomeCardData(
-                                    image: 'assets/home/card_record.jpg',
+                                    image: 'assets/home/card_hp.png',
                                     icon: Icons.public,
                                     title: '制作者のHP',
                                     subtitle: '最新情報を\n確認する',
@@ -344,30 +341,6 @@ class _HomeFeatureCard extends StatelessWidget {
                               ),
                             ),
                           ),
-                          if (data.badge != null)
-                            Positioned(
-                              left: 7,
-                              top: 7,
-                              child: DecoratedBox(
-                                decoration: BoxDecoration(
-                                  color: Colors.black54,
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(color: _HomeScreenState._gold.withOpacity(.6)),
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                                  child: Text(
-                                    data.badge!,
-                                    style: const TextStyle(
-                                      color: _HomeScreenState._gold,
-                                      fontSize: 8,
-                                      letterSpacing: 1.1,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
                           Align(
                             alignment: Alignment.bottomCenter,
                             child: Transform.translate(
@@ -506,17 +479,29 @@ class _HelpDialog extends StatelessWidget {
   const _HelpDialog();
   @override
   Widget build(BuildContext context) => AlertDialog(
-        title: const Text('使い方'),
+        backgroundColor: const Color(0xFF241F1C),
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: _HomeScreenState._gold.withOpacity(.55)),
+        ),
+        title: const Text('アプリの使用方法', style: TextStyle(color: Colors.white)),
         content: const SingleChildScrollView(
           child: Text(
-            '1. 「旅の思い出を記録する」で現在地を取得します。\n'
-            '2. 周辺候補から訪問した場所を登録します。\n'
-            '3. 「写真を撮る」で猫スタンプや文字を複数重ねて撮影できます。\n'
-            '4. スタンプは「スタンプエディット」で4個まで登録できます。\n'
-            '5. 「旅の予定」で1日のスケジュールを作成し、QRコードで共有できます。\n'
+            '1. 「旅の思い出を記録する」で現在地を取得します。\n\n'
+            '2. 周辺候補から訪問した場所を登録します。\n\n'
+            '3. 「写真を撮る」で猫スタンプや文字を複数重ねて撮影できます。\n\n'
+            '4. スタンプは「スタンプエディット」で4個まで登録できます。\n\n'
+            '5. 「旅の予定」で1日のスケジュールを作成し、QRコードで共有できます。\n\n'
             '6. 「旅の思い出を振り返る」で一覧・都道府県・年月から確認できます。',
+            style: TextStyle(color: Colors.white70, height: 1.55),
           ),
         ),
-        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('閉じる'))],
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('閉じる', style: TextStyle(color: _HomeScreenState._gold)),
+          ),
+        ],
       );
 }

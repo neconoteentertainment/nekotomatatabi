@@ -37,21 +37,13 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
         body: Stack(
           fit: StackFit.expand,
           children: [
-            Positioned.fill(
-              child: Image.asset(
-                'assets/home/hero.jpg',
-                fit: BoxFit.cover,
-                alignment: Alignment.topCenter,
-              ),
-            ),
             const Positioned.fill(
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [Color(0x99211916), Color(0xF2171412), Color(0xFF171412)],
-                    stops: [0, .34, .72],
+                    colors: [Color(0xFF201B18), Color(0xFF171412)],
                   ),
                 ),
               ),

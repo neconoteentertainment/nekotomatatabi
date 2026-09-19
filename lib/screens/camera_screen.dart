@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
@@ -32,6 +33,8 @@ class _OverlayItem {
   Offset offset;
   double scale = 1.0;
   double gestureStartScale = 1.0;
+  double rotation = 0.0;
+  double gestureStartRotation = 0.0;
 }
 
 class CameraScreen extends StatefulWidget {
@@ -307,17 +310,21 @@ class _CameraScreenState extends State<CameraScreen> {
         onTap: () => setState(() => _selectedOverlayId = item.id),
         onScaleStart: (_) {
           item.gestureStartScale = item.scale;
+          item.gestureStartRotation = item.rotation;
           setState(() => _selectedOverlayId = item.id);
         },
         onScaleUpdate: (details) {
           setState(() {
             item.offset += details.focalPointDelta;
             item.scale = (item.gestureStartScale * details.scale).clamp(.25, 4.0);
+            item.rotation = item.gestureStartRotation + details.rotation;
           });
         },
-        child: Transform.scale(
-          scale: item.scale,
-          alignment: Alignment.topLeft,
+        child: Transform(
+          alignment: Alignment.center,
+          transform: Matrix4.identity()
+            ..scale(item.scale)
+            ..rotateZ(item.rotation),
           child: Container(
             decoration: selected
                 ? BoxDecoration(border: Border.all(color: Colors.white.withValues(alpha: .9), width: 1.5), borderRadius: BorderRadius.circular(8))
@@ -361,9 +368,18 @@ class _CameraScreenState extends State<CameraScreen> {
         final targetW = (overlay.width * item.scale * xRatio / 2.5).round().clamp(1, base.width).toInt();
         final targetH = (overlay.height * item.scale * yRatio / 2.5).round().clamp(1, base.height).toInt();
         final resized = img.copyResize(overlay, width: targetW, height: targetH, interpolation: img.Interpolation.linear);
-        final x = (item.offset.dx * xRatio).round().clamp(0, base.width - 1).toInt();
-        final y = (item.offset.dy * yRatio).round().clamp(0, base.height - 1).toInt();
-        img.compositeImage(base, resized, dstX: x, dstY: y);
+        final rotated = item.rotation.abs() < .001
+            ? resized
+            : img.copyRotate(
+                resized,
+                angle: item.rotation * 180 / math.pi,
+                interpolation: img.Interpolation.linear,
+              );
+        final baseX = item.offset.dx * xRatio;
+        final baseY = item.offset.dy * yRatio;
+        final x = (baseX - (rotated.width - resized.width) / 2).round().clamp(0, base.width - 1).toInt();
+        final y = (baseY - (rotated.height - resized.height) / 2).round().clamp(0, base.height - 1).toInt();
+        img.compositeImage(base, rotated, dstX: x, dstY: y);
       }
 
       final temp = await getTemporaryDirectory();
@@ -508,8 +524,18 @@ class _CameraScreenState extends State<CameraScreen> {
                                   ),
                                 );
                               }),
-                              if (_selectedOverlayId != null)
+                              if (_selectedOverlayId != null) ...[
+                                ActionChip(avatar: const Icon(Icons.rotate_left), label: const Text('角度を戻す'), onPressed: () {
+                                  for (final item in _overlays) {
+                                    if (item.id == _selectedOverlayId) {
+                                      setState(() => item.rotation = 0);
+                                      break;
+                                    }
+                                  }
+                                }),
+                                const SizedBox(width: 8),
                                 ActionChip(avatar: const Icon(Icons.delete_outline), label: const Text('選択中を削除'), onPressed: _removeSelectedOverlay),
+                              ],
                               if (_overlays.isNotEmpty) ...[
                                 const SizedBox(width: 8),
                                 ActionChip(
@@ -547,7 +573,7 @@ class _CameraScreenState extends State<CameraScreen> {
                         ],
                       ),
                       const SizedBox(height: 4),
-                      const Text('背景をピンチ: ズーム / タップ: フォーカス / スタンプをピンチ: 拡大縮小', style: TextStyle(color: Colors.white70, fontSize: 11)),
+                      const Text('背景をピンチ: ズーム / タップ: フォーカス / スタンプを2本指: 拡大縮小・回転', style: TextStyle(color: Colors.white70, fontSize: 11)),
                     ],
                   ),
                 ),
