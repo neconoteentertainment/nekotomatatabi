@@ -109,6 +109,12 @@ class AppRepository extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> importPhotoToMemory(String memoryId, File source) async {
+    final saved = await _storage.persistPhoto(source);
+    await addPhotoToMemory(memoryId, saved);
+  }
+
+
   Future<void> deletePhotoFromMemory(String memoryId, String path) async {
     _memories = _memories.map((m) {
       if (m.id != memoryId) return m;

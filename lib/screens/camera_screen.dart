@@ -293,11 +293,7 @@ class _CameraScreenState extends State<CameraScreen> {
     );
     if (region == null || !mounted) return;
 
-    final prefectures = localItems
-        .where((e) => e.region == region)
-        .map((e) => e.prefecture)
-        .toSet()
-        .toList();
+    final prefectures = prefecturesForRegion(region);
     final prefecture = await showDialog<String>(
       context: context,
       builder: (context) => SimpleDialog(
@@ -454,18 +450,55 @@ class _CameraScreenState extends State<CameraScreen> {
     return data?.buffer.asUint8List();
   }
 
+  img.Image _cropToPreview(img.Image source, Size previewSize) {
+    final oriented = img.bakeOrientation(source);
+    if (previewSize.width <= 1 || previewSize.height <= 1) return oriented;
+
+    final targetAspect = previewSize.width / previewSize.height;
+    final sourceAspect = oriented.width / oriented.height;
+
+    if ((sourceAspect - targetAspect).abs() < .0001) return oriented;
+
+    if (sourceAspect > targetAspect) {
+      final cropWidth = (oriented.height * targetAspect).round().clamp(1, oriented.width).toInt();
+      final x = ((oriented.width - cropWidth) / 2).round();
+      return img.copyCrop(
+        oriented,
+        x: x,
+        y: 0,
+        width: cropWidth,
+        height: oriented.height,
+      );
+    }
+
+    final cropHeight = (oriented.width / targetAspect).round().clamp(1, oriented.height).toInt();
+    final y = ((oriented.height - cropHeight) / 2).round();
+    return img.copyCrop(
+      oriented,
+      x: 0,
+      y: y,
+      width: oriented.width,
+      height: cropHeight,
+    );
+  }
+
   Future<void> _shoot() async {
     final controller = _controller;
     if (controller == null || !controller.value.isInitialized || _saving) return;
     setState(() => _saving = true);
     try {
-      final shot = await controller.takePicture();
-      final baseBytes = await File(shot.path).readAsBytes();
-      final base = img.decodeImage(baseBytes);
-      if (base == null) throw Exception('写真の読み込みに失敗しました。');
-
       final previewBox = _previewKey.currentContext?.findRenderObject() as RenderBox?;
       final previewSize = previewBox?.size ?? context.size ?? const Size(1, 1);
+
+      final shot = await controller.takePicture();
+      final baseBytes = await File(shot.path).readAsBytes();
+      final decoded = img.decodeImage(baseBytes);
+      if (decoded == null) throw Exception('写真の読み込みに失敗しました。');
+
+      // CameraPreview は BoxFit.cover で中央クロップしているため、
+      // 保存画像も同じ縦横比・中央クロップにしてからスタンプを合成する。
+      // これによりシャッター時に見えていた構図と保存画像を一致させる。
+      final base = _cropToPreview(decoded, previewSize);
       final xRatio = base.width / previewSize.width;
       final yRatio = base.height / previewSize.height;
 
@@ -474,9 +507,20 @@ class _CameraScreenState extends State<CameraScreen> {
         if (overlayBytes == null) continue;
         final overlay = img.decodePng(overlayBytes);
         if (overlay == null) continue;
-        final targetW = (overlay.width * item.scale * xRatio / 2.5).round().clamp(1, base.width).toInt();
-        final targetH = (overlay.height * item.scale * yRatio / 2.5).round().clamp(1, base.height).toInt();
-        final resized = img.copyResize(overlay, width: targetW, height: targetH, interpolation: img.Interpolation.linear);
+
+        // RepaintBoundary は未変形のスタンプを 2.5x で取得している。
+        // UI側の Transform は中心基準なので、保存時もスタンプ中心を基準に
+        // 拡大・回転して座標を合わせる。
+        final logicalW = overlay.width / 2.5;
+        final logicalH = overlay.height / 2.5;
+        final targetW = (logicalW * item.scale * xRatio).round().clamp(1, base.width * 4).toInt();
+        final targetH = (logicalH * item.scale * yRatio).round().clamp(1, base.height * 4).toInt();
+        final resized = img.copyResize(
+          overlay,
+          width: targetW,
+          height: targetH,
+          interpolation: img.Interpolation.linear,
+        );
         final rotated = item.rotation.abs() < .001
             ? resized
             : img.copyRotate(
@@ -484,11 +528,34 @@ class _CameraScreenState extends State<CameraScreen> {
                 angle: item.rotation * 180 / math.pi,
                 interpolation: img.Interpolation.linear,
               );
-        final baseX = item.offset.dx * xRatio;
-        final baseY = item.offset.dy * yRatio;
-        final x = (baseX - (rotated.width - resized.width) / 2).round().clamp(0, base.width - 1).toInt();
-        final y = (baseY - (rotated.height - resized.height) / 2).round().clamp(0, base.height - 1).toInt();
-        img.compositeImage(base, rotated, dstX: x, dstY: y);
+
+        final centerX = (item.offset.dx + logicalW / 2) * xRatio;
+        final centerY = (item.offset.dy + logicalH / 2) * yRatio;
+        final x = (centerX - rotated.width / 2).round();
+        final y = (centerY - rotated.height / 2).round();
+
+        // 画面端にはみ出したスタンプは、表示されている範囲だけ切り出して合成する。
+        final dstX = math.max(0, x).toInt();
+        final dstY = math.max(0, y).toInt();
+        final srcX = math.max(0, -x).toInt();
+        final srcY = math.max(0, -y).toInt();
+        final visibleW = math.min(rotated.width - srcX, base.width - dstX).toInt();
+        final visibleH = math.min(rotated.height - srcY, base.height - dstY).toInt();
+        if (visibleW > 0 && visibleH > 0) {
+          final clipped = (srcX == 0 &&
+                  srcY == 0 &&
+                  visibleW == rotated.width &&
+                  visibleH == rotated.height)
+              ? rotated
+              : img.copyCrop(
+                  rotated,
+                  x: srcX,
+                  y: srcY,
+                  width: visibleW,
+                  height: visibleH,
+                );
+          img.compositeImage(base, clipped, dstX: dstX, dstY: dstY);
+        }
       }
 
       final temp = await getTemporaryDirectory();
@@ -529,13 +596,22 @@ class _CameraScreenState extends State<CameraScreen> {
                           onScaleUpdate: (d) {
                             if (d.pointerCount >= 2) _setZoom(_zoomAtGestureStart * d.scale);
                           },
-                          child: FittedBox(
-                            fit: BoxFit.cover,
-                            child: SizedBox(
-                              width: controller.value.previewSize!.height,
-                              height: controller.value.previewSize!.width,
-                              child: CameraPreview(controller),
-                            ),
+                          child: Builder(
+                            builder: (_) {
+                              final raw = controller.value.previewSize!;
+                              final portrait = size.height >= size.width;
+                              final previewWidth = portrait ? raw.height : raw.width;
+                              final previewHeight = portrait ? raw.width : raw.height;
+                              return FittedBox(
+                                fit: BoxFit.cover,
+                                alignment: Alignment.center,
+                                child: SizedBox(
+                                  width: previewWidth,
+                                  height: previewHeight,
+                                  child: CameraPreview(controller),
+                                ),
+                              );
+                            },
                           ),
                         ),
                 ),

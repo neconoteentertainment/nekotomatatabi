@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:gal/gal.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../models/travel_memory.dart';
 import '../services/app_repository.dart';
@@ -191,6 +192,25 @@ class _MemoryCard extends StatelessWidget {
     await repository.deletePhotoFromMemory(memory.id, path);
   }
 
+  Future<void> _importPhotos(BuildContext context) async {
+    try {
+      final picked = await ImagePicker().pickMultiImage(imageQuality: 95);
+      if (picked.isEmpty) return;
+      for (final image in picked) {
+        await repository.importPhotoToMemory(memory.id, File(image.path));
+      }
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${picked.length}枚の写真を「${memory.placeName}」に追加しました。')),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('写真の追加に失敗しました: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final photos = memory.photoPaths.where((p) => File(p).existsSync()).toList();
@@ -243,6 +263,19 @@ class _MemoryCard extends StatelessWidget {
               ),
               const SizedBox(height: 10),
             ],
+            Align(
+              alignment: Alignment.centerLeft,
+              child: OutlinedButton.icon(
+                onPressed: () => _importPhotos(context),
+                icon: const Icon(Icons.add_photo_alternate_outlined),
+                label: const Text('スマホの写真から追加'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFFE6C28D),
+                  side: const BorderSide(color: Color(0x99E6C28D)),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
             if (photos.isEmpty)
               const Align(
                 alignment: Alignment.centerLeft,

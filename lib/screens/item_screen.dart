@@ -28,20 +28,29 @@ class ItemScreen extends StatelessWidget {
               style: TextStyle(color: Colors.white70),
             ),
             const SizedBox(height: 12),
-            Card(
-              child: ListTile(
-                leading: const CircleAvatar(child: Icon(Icons.landscape_outlined)),
-                title: const Text('東海'),
-                subtitle: const Text('愛知県・岐阜県・三重県・静岡県'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => _PrefectureScreen(repository: repository),
+            for (final region in localItemRegions) ...[
+              Card(
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: AppScaffold.gold.withValues(alpha: .12),
+                    child: const Icon(Icons.landscape_outlined, color: AppScaffold.gold),
+                  ),
+                  title: Text(region),
+                  subtitle: Text(prefecturesForRegion(region).join('・')),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => _PrefectureScreen(
+                        repository: repository,
+                        region: region,
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 12),
+              const SizedBox(height: 8),
+            ],
+            const SizedBox(height: 8),
             const Card(
               child: ListTile(
                 leading: CircleAvatar(child: Icon(Icons.lock_outline)),
@@ -59,7 +68,7 @@ class ItemScreen extends StatelessWidget {
                 border: Border.all(color: AppScaffold.gold.withValues(alpha: .25)),
               ),
               child: const Text(
-                '※動作確認用として、現在は東海4県を各30Pから開始しています。リリース時は0P開始に変更します。',
+                '※動作確認用として、現在は東海4県のみ各30Pから開始しています。リリース時は0P開始に変更します。',
                 style: TextStyle(color: Colors.white70, fontSize: 12),
               ),
             ),
@@ -71,21 +80,23 @@ class ItemScreen extends StatelessWidget {
 }
 
 class _PrefectureScreen extends StatelessWidget {
-  const _PrefectureScreen({required this.repository});
+  const _PrefectureScreen({required this.repository, required this.region});
   final AppRepository repository;
+  final String region;
 
   @override
   Widget build(BuildContext context) {
+    final prefectures = prefecturesForRegion(region);
     return AppScaffold(
-      title: '東海',
+      title: region,
       child: AnimatedBuilder(
         animation: repository,
         builder: (_, __) => ListView.separated(
           padding: const EdgeInsets.all(16),
-          itemCount: tokaiPrefectures.length,
+          itemCount: prefectures.length,
           separatorBuilder: (_, __) => const SizedBox(height: 8),
           itemBuilder: (context, index) {
-            final prefecture = tokaiPrefectures[index];
+            final prefecture = prefectures[index];
             final points = repository.pointsForPrefecture(prefecture);
             return Card(
               child: ListTile(
@@ -175,6 +186,11 @@ class _LocalItemListScreen extends StatelessWidget {
                                   fit: BoxFit.contain,
                                   color: unlocked ? null : Colors.black54,
                                   colorBlendMode: unlocked ? null : BlendMode.srcATop,
+                                  errorBuilder: (_, __, ___) => const Icon(
+                                    Icons.image_not_supported_outlined,
+                                    color: Colors.white38,
+                                    size: 34,
+                                  ),
                                 ),
                                 if (!unlocked)
                                   const Center(
