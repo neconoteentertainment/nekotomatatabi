@@ -35,8 +35,10 @@ class AppRepository extends ChangeNotifier {
     final count = _uniqueMemories(
       _memories.where((m) => m.prefecture == prefecture),
     ).length;
-    // テスト期間中は仕様書どおり東海4県を30Pから開始。リリース時は0へ変更する。
-    final testBonus = tokaiPrefectures.contains(prefecture) ? _testBasePoints : 0;
+    // 画像確認用ビルドでは、実装済みの全都道府県を30Pから開始する。
+    // リリース時はこのテスト加算を0へ戻す。
+    final testBonus =
+        localItemPrefectures.contains(prefecture) ? _testBasePoints : 0;
     return testBonus + count;
   }
 

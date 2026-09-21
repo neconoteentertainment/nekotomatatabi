@@ -1,7 +1,7 @@
 name: nekotomatatabi
 description: ねことまた旅 - 猫と一緒に旅した気分で思い出を残す旅行記録アプリ
 publish_to: 'none'
-version: 0.8.0+8
+version: 0.9.0+9
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
@@ -37,16 +37,27 @@ flutter:
   assets:
     - assets/home/
     - assets/bgm/
-    - assets/local_items/
-    - assets/local_items/hokkaido/hokkaido/
-    - assets/local_items/tohoku/aomori/
-    - assets/local_items/tohoku/iwate/
-    - assets/local_items/tohoku/miyagi/
-    - assets/local_items/tohoku/akita/
-    - assets/local_items/tohoku/yamagata/
-    - assets/local_items/tohoku/fukushima/
-    - assets/local_items/tokai/aichi/
-    - assets/local_items/tokai/gifu/
-    - assets/local_items/tokai/mie/
-    - assets/local_items/tokai/shizuoka/
+    - assets/local_items/北海道地方/北海道/
+    - assets/local_items/東北地方/青森県/
+    - assets/local_items/東北地方/岩手県/
+    - assets/local_items/東北地方/宮城県/
+    - assets/local_items/東北地方/秋田県/
+    - assets/local_items/東北地方/山形/
+    - assets/local_items/東北地方/福島/
+    - assets/local_items/関東地方/茨城/
+    - assets/local_items/関東地方/栃木/
+    - assets/local_items/関東地方/群馬/
+    - assets/local_items/関東地方/埼玉/
+    - assets/local_items/関東地方/千葉/
+    - assets/local_items/関東地方/東京/
+    - assets/local_items/関東地方/神奈川/
+    - assets/local_items/中部地方/新潟/
+    - assets/local_items/中部地方/富山/
+    - assets/local_items/中部地方/石川/
+    - assets/local_items/中部地方/福井/
+    - assets/local_items/中部地方/山梨/
+    - assets/local_items/中部地方/長野/
+    - assets/local_items/中部地方/岐阜/
+    - assets/local_items/中部地方/静岡/
+    - assets/local_items/中部地方/愛知/
     - assets/icon/app_icon.png
