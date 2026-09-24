@@ -11,7 +11,13 @@ class AppAudioService {
   Future<void> configure({required bool enabled, required String asset}) async {
     _enabled = enabled;
     _currentAsset = asset;
-    await _safe(_apply);
+    await _safe(() async {
+      // iPhone/iPad の消音スイッチを優先し、端末が消音中はBGMを鳴らさない。
+      await _player.setAudioContext(
+        AudioContextConfig(respectSilence: true).build(),
+      );
+      await _apply();
+    });
   }
 
   Future<void> setEnabled(bool enabled) async {

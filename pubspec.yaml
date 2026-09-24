@@ -1,7 +1,7 @@
 name: nekotomatatabi
 description: ねことまた旅 - 猫と一緒に旅した気分で思い出を残す旅行記録アプリ
 publish_to: 'none'
-version: 0.9.0+9
+version: 0.11.1+12
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
@@ -26,6 +26,7 @@ dependencies:
   mobile_scanner: ^7.1.2
   gal: ^2.3.3
   audioplayers: ^6.5.1
+  google_mlkit_text_recognition: ^0.15.0
 
 dev_dependencies:
   flutter_test:
@@ -37,11 +38,12 @@ flutter:
   assets:
     - assets/home/
     - assets/bgm/
+    - assets/camera_stamps/
     - assets/local_items/北海道地方/北海道/
-    - assets/local_items/東北地方/青森県/
-    - assets/local_items/東北地方/岩手県/
-    - assets/local_items/東北地方/宮城県/
-    - assets/local_items/東北地方/秋田県/
+    - assets/local_items/東北地方/青森/
+    - assets/local_items/東北地方/岩手/
+    - assets/local_items/東北地方/宮城/
+    - assets/local_items/東北地方/秋田/
     - assets/local_items/東北地方/山形/
     - assets/local_items/東北地方/福島/
     - assets/local_items/関東地方/茨城/
@@ -60,4 +62,28 @@ flutter:
     - assets/local_items/中部地方/岐阜/
     - assets/local_items/中部地方/静岡/
     - assets/local_items/中部地方/愛知/
+    - assets/local_items/近畿/三重/
+    - assets/local_items/近畿/滋賀/
+    - assets/local_items/近畿/京都/
+    - assets/local_items/近畿/大阪/
+    - assets/local_items/近畿/兵庫/
+    - assets/local_items/近畿/奈良/
+    - assets/local_items/近畿/和歌山/
+    - assets/local_items/中国・四国/鳥取/
+    - assets/local_items/中国・四国/島根/
+    - assets/local_items/中国・四国/岡山/
+    - assets/local_items/中国・四国/広島/
+    - assets/local_items/中国・四国/山口/
+    - assets/local_items/中国・四国/徳島/
+    - assets/local_items/中国・四国/香川/
+    - assets/local_items/中国・四国/愛媛/
+    - assets/local_items/中国・四国/高知/
+    - assets/local_items/九州/福岡/
+    - assets/local_items/九州/佐賀/
+    - assets/local_items/九州/長崎/
+    - assets/local_items/九州/熊本/
+    - assets/local_items/九州/大分/
+    - assets/local_items/九州/宮崎/
+    - assets/local_items/九州/鹿児島/
+    - assets/local_items/九州/沖縄/
     - assets/icon/app_icon.png

@@ -31,6 +31,13 @@ class AppRepository extends ChangeNotifier {
 
   int get uniqueVisitCount => _uniqueMemories(_memories).length;
 
+  TravelMemory? memoryById(String id) {
+    for (final memory in _memories) {
+      if (memory.id == id) return memory;
+    }
+    return null;
+  }
+
   int pointsForPrefecture(String prefecture) {
     final count = _uniqueMemories(
       _memories.where((m) => m.prefecture == prefecture),

@@ -23,7 +23,7 @@ class SettingsScreen extends StatelessWidget {
                   SwitchListTile(
                     secondary: const Icon(Icons.music_note),
                     title: const Text('BGM'),
-                    subtitle: const Text('すべての画面でBGMを流します。'),
+                    subtitle: const Text('端末の消音設定とバックグラウンド停止を優先します。'),
                     value: repository.bgmEnabled,
                     onChanged: repository.setBgmEnabled,
                   ),

@@ -15,7 +15,7 @@ import '../models/local_item.dart';
 import '../services/app_repository.dart';
 import '../services/storage_service.dart';
 
-enum _OverlayKind { stamp, text }
+enum _OverlayKind { stamp, text, signboard }
 
 class _OverlayItem {
   _OverlayItem.stamp({
@@ -31,6 +31,11 @@ class _OverlayItem {
       : kind = _OverlayKind.text,
         stampIndex = null,
         assetPath = null;
+
+  _OverlayItem.signboard({required this.id, required this.text, required this.offset})
+      : kind = _OverlayKind.signboard,
+        stampIndex = null,
+        assetPath = 'assets/camera_stamps/signboard.png';
 
   final int id;
   final _OverlayKind kind;
@@ -273,6 +278,33 @@ class _CameraScreenState extends State<CameraScreen> {
     });
   }
 
+  void _addBuiltInStamp(String assetPath) {
+    final item = _OverlayItem.stamp(
+      id: ++_overlaySerial,
+      assetPath: assetPath,
+      offset: Offset(70.0 + (_overlays.length % 3) * 24, 120.0 + (_overlays.length % 3) * 24),
+    );
+    setState(() {
+      _overlays.add(item);
+      _selectedOverlayId = item.id;
+      _showStampPanel = false;
+    });
+  }
+
+  void _addSignboard() {
+    final placeName = widget.repository.memoryById(widget.memoryId)?.placeName ?? '現在地';
+    final item = _OverlayItem.signboard(
+      id: ++_overlaySerial,
+      text: placeName,
+      offset: Offset(60.0 + (_overlays.length % 3) * 24, 100.0 + (_overlays.length % 3) * 24),
+    );
+    setState(() {
+      _overlays.add(item);
+      _selectedOverlayId = item.id;
+      _showStampPanel = false;
+    });
+  }
+
   Future<void> _chooseLocalItemStamp() async {
     final region = await showDialog<String>(
       context: context,
@@ -390,6 +422,39 @@ class _CameraScreenState extends State<CameraScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(color: Colors.white.withValues(alpha: .82), borderRadius: BorderRadius.circular(20)),
         child: Text(item.text!, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black)),
+      );
+    }
+    if (item.kind == _OverlayKind.signboard) {
+      return SizedBox(
+        width: 220,
+        height: 220,
+        child: Stack(
+          children: [
+            Positioned.fill(child: Image.asset(item.assetPath!, fit: BoxFit.contain)),
+            Positioned(
+              left: 30,
+              right: 30,
+              top: 40,
+              height: 58,
+              child: Center(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    item.text!,
+                    maxLines: 2,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Color(0xFF3B2415),
+                      fontSize: 23,
+                      fontWeight: FontWeight.w900,
+                      shadows: [Shadow(color: Color(0x66FFFFFF), blurRadius: 1)],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       );
     }
     if (item.assetPath != null) {
@@ -700,6 +765,24 @@ class _CameraScreenState extends State<CameraScreen> {
                                 avatar: const Icon(Icons.card_giftcard_outlined),
                                 label: const Text('ご当地'),
                                 onPressed: _chooseLocalItemStamp,
+                              ),
+                              const SizedBox(width: 8),
+                              ActionChip(
+                                avatar: Image.asset('assets/camera_stamps/chii.png', width: 24, height: 24),
+                                label: const Text('ちぃ'),
+                                onPressed: () => _addBuiltInStamp('assets/camera_stamps/chii.png'),
+                              ),
+                              const SizedBox(width: 8),
+                              ActionChip(
+                                avatar: Image.asset('assets/camera_stamps/mii.png', width: 24, height: 24),
+                                label: const Text('みぃ'),
+                                onPressed: () => _addBuiltInStamp('assets/camera_stamps/mii.png'),
+                              ),
+                              const SizedBox(width: 8),
+                              ActionChip(
+                                avatar: const Icon(Icons.signpost_outlined),
+                                label: const Text('かんばん'),
+                                onPressed: _addSignboard,
                               ),
                               const SizedBox(width: 8),
                               ...List.generate(4, (i) {

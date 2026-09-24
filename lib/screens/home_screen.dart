@@ -8,6 +8,7 @@ import 'item_screen.dart';
 import 'record_screen.dart';
 import 'settings_screen.dart';
 import 'stamp_editor_screen.dart';
+import 'travel_assist_screen.dart';
 import 'travel_plan_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -111,6 +112,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             _MenuPage.cards(
                               cards: [
                                 _HomeCardData(
+                                  image: 'assets/home/card_assist.jpg',
+                                  icon: Icons.backpack_outlined,
+                                  title: '旅の手助け',
+                                  subtitle: '電子チケット保存と\n割り勘計算',
+                                  onTap: () => _push(const TravelAssistScreen()),
+                                ),
+                                _HomeCardData(
                                   image: 'assets/home/card_stamp.png',
                                   imageAlignment: Alignment.center,
                                   icon: Icons.pets,
@@ -126,6 +134,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                   subtitle: '旅先で集めたポイントで\nご当地アイテムを解放',
                                   onTap: () => _push(ItemScreen(repository: repository)),
                                 ),
+                              ],
+                            ),
+                            _MenuPage.cards(
+                              cards: [
                                 _HomeCardData(
                                   image: 'assets/home/card_settings.png',
                                   imageAlignment: Alignment.center,
@@ -134,39 +146,30 @@ class _HomeScreenState extends State<HomeScreen> {
                                   subtitle: 'アプリの情報や\n各種設定を確認',
                                   onTap: () => _push(SettingsScreen(repository: repository)),
                                 ),
-                              ],
-                            ),
-                            _MenuPage(
-                              cards: [
-                                _HomeFeatureCard(
-                                  data: _HomeCardData(
-                                    image: 'assets/home/card_help.png',
-                                    icon: Icons.help_outline,
-                                    title: 'アプリの\n使用方法',
-                                    subtitle: 'ねことまた旅の\n使い方を見る',
-                                    onTap: () => showDialog<void>(
-                                      context: context,
-                                      builder: (_) => const _HelpDialog(),
-                                    ),
+                                _HomeCardData(
+                                  image: 'assets/home/card_help.png',
+                                  icon: Icons.help_outline,
+                                  title: 'アプリの\n使用方法',
+                                  subtitle: 'ねことまた旅の\n使い方を見る',
+                                  onTap: () => showDialog<void>(
+                                    context: context,
+                                    builder: (_) => const _HelpDialog(),
                                   ),
                                 ),
-                                _HomeFeatureCard(
-                                  data: _HomeCardData(
-                                    image: 'assets/home/card_hp.png',
-                                    icon: Icons.public,
-                                    title: '制作者のHP',
-                                    subtitle: '最新情報を\n確認する',
-                                    onTap: () async {
-                                      final uri = Uri.parse('https://example.com');
-                                      if (!await launchUrl(uri, mode: LaunchMode.externalApplication) && context.mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(content: Text('HPを開けませんでした。URL設定を確認してください。')),
-                                        );
-                                      }
-                                    },
-                                  ),
+                                _HomeCardData(
+                                  image: 'assets/home/card_hp.png',
+                                  icon: Icons.public,
+                                  title: '制作者のHP',
+                                  subtitle: '最新情報を\n確認する',
+                                  onTap: () async {
+                                    final uri = Uri.parse('https://example.com');
+                                    if (!await launchUrl(uri, mode: LaunchMode.externalApplication) && context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('HPを開けませんでした。URL設定を確認してください。')),
+                                      );
+                                    }
+                                  },
                                 ),
-                                const _EmptyHomeCard(),
                               ],
                             ),
                           ],
@@ -400,22 +403,6 @@ class _HomeFeatureCard extends StatelessWidget {
   }
 }
 
-class _EmptyHomeCard extends StatelessWidget {
-  const _EmptyHomeCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0x7A251F1B),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: _HomeScreenState._gold.withOpacity(.3)),
-      ),
-      child: const Center(child: Icon(Icons.pets, color: Colors.white24, size: 36)),
-    );
-  }
-}
-
 class _AdBanner extends StatelessWidget {
   const _AdBanner();
 
@@ -483,9 +470,10 @@ class _HelpDialog extends StatelessWidget {
             '1. 「旅の思い出を記録する」で現在地を取得します。\n\n'
             '2. 周辺候補から訪問した場所を登録します。\n\n'
             '3. 「写真を撮る」で猫スタンプや文字を複数重ねて撮影できます。\n\n'
-            '4. スタンプは「スタンプエディット」で4個まで登録できます。\n\n'
-            '5. 「旅の予定」で1日のスケジュールを作成し、QRコードで共有できます。\n\n'
-            '6. 「旅の思い出を振り返る」で一覧・都道府県・年月から確認できます。',
+            '4. 「旅の手助け」で電子チケット画像の整理や割り勘計算ができます。\n\n'
+            '5. スタンプは「スタンプエディット」で4個まで登録できます。\n\n'
+            '6. 「旅の予定」で1日のスケジュールを作成し、QRコードで共有できます。\n\n'
+            '7. 「旅の思い出を振り返る」で一覧・都道府県・年月から確認できます。',
             style: TextStyle(color: Colors.white70, height: 1.55),
           ),
         ),
