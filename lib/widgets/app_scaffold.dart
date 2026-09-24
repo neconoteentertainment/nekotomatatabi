@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'washi_surface.dart';
+
 class AppScaffold extends StatelessWidget {
   const AppScaffold({super.key, required this.title, required this.child, this.actions});
 
@@ -50,7 +52,7 @@ class MenuCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return WashiCard(
       clipBehavior: Clip.antiAlias,
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
@@ -58,8 +60,8 @@ class MenuCard extends StatelessWidget {
           backgroundColor: AppScaffold.gold.withValues(alpha: .12),
           child: Icon(icon, color: AppScaffold.gold),
         ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-        subtitle: subtitle == null ? null : Text(subtitle!, style: const TextStyle(color: Colors.white70)),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, color: WashiSurface.ink)),
+        subtitle: subtitle == null ? null : Text(subtitle!, style: const TextStyle(color: WashiSurface.mutedInk)),
         trailing: const Icon(Icons.chevron_right, color: AppScaffold.gold),
         onTap: onTap,
       ),

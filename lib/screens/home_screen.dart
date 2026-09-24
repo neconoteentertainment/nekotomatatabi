@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../services/app_repository.dart';
+import '../widgets/washi_surface.dart';
 import 'history_screen.dart';
 import 'item_screen.dart';
 import 'record_screen.dart';
@@ -103,7 +104,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 _HomeCardData(
                                   image: 'assets/home/card_plan.jpg',
                                   icon: Icons.calendar_month_outlined,
-                                  title: '旅の予定',
+                                  title: '旅の予定を\n立てる',
                                   subtitle: '1日のスケジュール作成\nQR共有',
                                   onTap: () => _push(TravelPlanScreen(repository: repository)),
                                 ),
@@ -122,7 +123,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   image: 'assets/home/card_stamp.png',
                                   imageAlignment: Alignment.center,
                                   icon: Icons.pets,
-                                  title: 'スタンプ\nエディット',
+                                  title: 'スタンプ登録',
                                   subtitle: 'お気に入りの猫画像を\n4個まで登録',
                                   onTap: () => _push(StampEditorScreen(repository: repository)),
                                 ),
@@ -130,7 +131,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   image: 'assets/home/card_local.png',
                                   imageAlignment: Alignment.center,
                                   icon: Icons.card_giftcard_outlined,
-                                  title: 'ご当地アイテム\nを確認',
+                                  title: '名産品集め',
                                   subtitle: '旅先で集めたポイントで\nご当地アイテムを解放',
                                   onTap: () => _push(ItemScreen(repository: repository)),
                                 ),
@@ -227,26 +228,24 @@ class _VisitBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       height: compact ? 48 : 56,
-      padding: const EdgeInsets.symmetric(horizontal: 18),
-      decoration: BoxDecoration(
-        color: _HomeScreenState._panel,
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: _HomeScreenState._gold.withOpacity(.9)),
-      ),
-      child: Row(
+      child: WashiSurface(
+        borderRadius: 30,
+        padding: const EdgeInsets.symmetric(horizontal: 18),
+        child: Row(
         children: [
           Icon(Icons.pets, color: _HomeScreenState._gold, size: compact ? 23 : 27),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               '今までに訪れた観光地  $visits 箇所',
-              style: TextStyle(color: Colors.white, fontSize: compact ? 14 : 17, fontWeight: FontWeight.w600),
+              style: TextStyle(color: WashiSurface.ink, fontSize: compact ? 14 : 17, fontWeight: FontWeight.w600),
               overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
+        ),
       ),
     );
   }
@@ -312,7 +311,12 @@ class _HomeFeatureCard extends StatelessWidget {
             onTap: data.onTap,
             child: Ink(
               decoration: BoxDecoration(
-                color: const Color(0xE625211E),
+                image: const DecorationImage(
+                  image: AssetImage('assets/home/kabegami.png'),
+                  fit: BoxFit.cover,
+                  opacity: .9,
+                ),
+                color: const Color(0xFFFFF8EC),
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(color: _HomeScreenState._gold.withOpacity(.62)),
               ),
@@ -332,7 +336,7 @@ class _HomeFeatureCard extends StatelessWidget {
                               gradient: LinearGradient(
                                 begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,
-                                colors: [Colors.transparent, Color(0xCC171412)],
+                                colors: [Colors.transparent, Color(0xB8FFF8EC)],
                               ),
                             ),
                           ),
@@ -362,7 +366,7 @@ class _HomeFeatureCard extends StatelessWidget {
                         data.title,
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: Colors.white,
+                          color: const Color(0xFF2E241D),
                           fontSize: compact ? 13 : 15,
                           fontWeight: FontWeight.w600,
                           height: 1.2,
@@ -378,7 +382,7 @@ class _HomeFeatureCard extends StatelessWidget {
                           textAlign: TextAlign.center,
                           maxLines: 3,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(color: Colors.white.withOpacity(.84), fontSize: 10.5, height: 1.3),
+                          style: TextStyle(color: const Color(0xFF2E241D).withOpacity(.82), fontSize: 10.5, height: 1.3),
                         ),
                       ),
                     const Spacer(),
@@ -471,8 +475,8 @@ class _HelpDialog extends StatelessWidget {
             '2. 周辺候補から訪問した場所を登録します。\n\n'
             '3. 「写真を撮る」で猫スタンプや文字を複数重ねて撮影できます。\n\n'
             '4. 「旅の手助け」で電子チケット画像の整理や割り勘計算ができます。\n\n'
-            '5. スタンプは「スタンプエディット」で4個まで登録できます。\n\n'
-            '6. 「旅の予定」で1日のスケジュールを作成し、QRコードで共有できます。\n\n'
+            '5. スタンプは「スタンプ登録」で4個まで登録できます。\n\n'
+            '6. 「旅の予定を立てる」で1日のスケジュールを作成し、QRコードで共有できます。\n\n'
             '7. 「旅の思い出を振り返る」で一覧・都道府県・年月から確認できます。',
             style: TextStyle(color: Colors.white70, height: 1.55),
           ),

@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../models/travel_memory.dart';
 import '../services/app_repository.dart';
+import '../widgets/washi_surface.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key, required this.repository});
@@ -82,24 +83,20 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
                   ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
-                    child: Container(
+                    child: WashiSurface(
                       padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: const Color(0xC4211B18),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: _gold.withOpacity(.72)),
-                      ),
+                      borderRadius: 24,
                       child: TabBar(
                         controller: _tabs,
                         indicatorSize: TabBarIndicatorSize.tab,
                         indicator: BoxDecoration(
-                          color: _gold.withOpacity(.18),
+                          color: _gold.withOpacity(.42),
                           borderRadius: BorderRadius.circular(18),
                           border: Border.all(color: _gold.withOpacity(.7)),
                         ),
                         dividerColor: Colors.transparent,
-                        labelColor: _gold,
-                        unselectedLabelColor: Colors.white70,
+                        labelColor: WashiSurface.ink,
+                        unselectedLabelColor: WashiSurface.mutedInk,
                         labelStyle: const TextStyle(fontWeight: FontWeight.w700),
                         tabs: const [
                           Tab(icon: Icon(Icons.photo_album_outlined, size: 19), text: '一覧'),
@@ -214,20 +211,13 @@ class _MemoryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final photos = memory.photoPaths.where((p) => File(p).existsSync()).toList();
-    return Container(
+    return WashiSurface(
       margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xE628211D),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE6C28D).withOpacity(.48)),
-        boxShadow: const [BoxShadow(color: Colors.black38, blurRadius: 12, offset: Offset(0, 6))],
-      ),
+      borderRadius: 20,
       clipBehavior: Clip.antiAlias,
-      child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
+      child: ExpansionTile(
           iconColor: const Color(0xFFE6C28D),
-          collapsedIconColor: Colors.white70,
+          collapsedIconColor: WashiSurface.mutedInk,
           tilePadding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
           childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 14),
           leading: photos.isNotEmpty
@@ -245,10 +235,10 @@ class _MemoryCard extends StatelessWidget {
                   ),
                   child: const Icon(Icons.place_outlined, color: Color(0xFFE6C28D)),
                 ),
-          title: Text(memory.placeName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+          title: Text(memory.placeName, style: const TextStyle(color: WashiSurface.ink, fontWeight: FontWeight.w700)),
           subtitle: Text(
             '${memory.prefecture} ・ ${_date(memory.visitedAt)}',
-            style: const TextStyle(color: Colors.white70),
+            style: const TextStyle(color: WashiSurface.mutedInk),
           ),
           trailing: IconButton(
             tooltip: 'この場所を削除',
@@ -259,7 +249,7 @@ class _MemoryCard extends StatelessWidget {
             if (memory.memo.isNotEmpty) ...[
               Align(
                 alignment: Alignment.centerLeft,
-                child: Text(memory.memo, style: const TextStyle(color: Colors.white70)),
+                child: Text(memory.memo, style: const TextStyle(color: WashiSurface.mutedInk)),
               ),
               const SizedBox(height: 10),
             ],
@@ -279,7 +269,7 @@ class _MemoryCard extends StatelessWidget {
             if (photos.isEmpty)
               const Align(
                 alignment: Alignment.centerLeft,
-                child: Text('写真はまだありません。', style: TextStyle(color: Colors.white54)),
+                child: Text('写真はまだありません。', style: TextStyle(color: WashiSurface.mutedInk)),
               ),
             if (photos.isNotEmpty)
               SizedBox(
@@ -336,7 +326,6 @@ class _MemoryCard extends StatelessWidget {
                 ),
               ),
           ],
-        ),
       ),
     );
   }
@@ -423,10 +412,15 @@ class _PrefectureMap extends StatelessWidget {
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
                 decoration: BoxDecoration(
-                  color: visited ? const Color(0xFF5A432E) : const Color(0xB92B2521),
+                  color: const Color(0xFFFFF8EC),
+                  image: const DecorationImage(
+                    image: AssetImage('assets/home/kabegami.png'),
+                    fit: BoxFit.cover,
+                    opacity: .9,
+                  ),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: visited ? const Color(0xFFE6C28D) : Colors.white12,
+                    color: visited ? const Color(0xFFE6C28D) : WashiSurface.border.withValues(alpha: .42),
                   ),
                 ),
                 alignment: Alignment.center,
@@ -434,7 +428,7 @@ class _PrefectureMap extends StatelessWidget {
                   visited ? '$prefecture  $count' : prefecture,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: visited ? const Color(0xFFFFE4B8) : Colors.white54,
+                    color: visited ? const Color(0xFF76501F) : WashiSurface.mutedInk,
                     fontWeight: visited ? FontWeight.bold : FontWeight.normal,
                     fontSize: 12,
                   ),
@@ -567,14 +561,10 @@ class _TravelHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return WashiSurface(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xD925201D),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0x66E6C28D)),
-      ),
+      borderRadius: 18,
       child: Row(
         children: [
           Container(
@@ -592,9 +582,9 @@ class _TravelHeader extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16)),
+                Text(title, style: const TextStyle(color: WashiSurface.ink, fontWeight: FontWeight.w700, fontSize: 16)),
                 const SizedBox(height: 3),
-                Text(subtitle, style: const TextStyle(color: Colors.white70, fontSize: 12, height: 1.35)),
+                Text(subtitle, style: const TextStyle(color: WashiSurface.mutedInk, fontSize: 12, height: 1.35)),
               ],
             ),
           ),
@@ -611,20 +601,16 @@ class _EmptyMemory extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Container(
+      child: WashiSurface(
         margin: const EdgeInsets.all(24),
         padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: const Color(0xC925201D),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0x66E6C28D)),
-        ),
+        borderRadius: 18,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(Icons.luggage_outlined, color: Color(0xFFE6C28D), size: 40),
             const SizedBox(height: 10),
-            Text(message, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70)),
+            Text(message, textAlign: TextAlign.center, style: const TextStyle(color: WashiSurface.mutedInk)),
           ],
         ),
       ),

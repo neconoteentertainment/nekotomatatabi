@@ -5,6 +5,7 @@ import '../models/travel_memory.dart';
 import '../services/app_repository.dart';
 import '../services/location_service.dart';
 import '../widgets/app_scaffold.dart';
+import '../widgets/washi_surface.dart';
 import 'camera_screen.dart';
 
 class RecordScreen extends StatefulWidget {
@@ -162,7 +163,7 @@ class _RecordScreenState extends State<RecordScreen> {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Card(
+          WashiCard(
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -219,7 +220,7 @@ class _RecordScreenState extends State<RecordScreen> {
               final distance = _position == null
                   ? 0.0
                   : Geolocator.distanceBetween(_position!.latitude, _position!.longitude, p.latitude, p.longitude);
-              return Card(
+              return WashiCard(
                 child: ListTile(
                   leading: const Icon(Icons.place_outlined),
                   title: Text(p.name),
@@ -230,7 +231,7 @@ class _RecordScreenState extends State<RecordScreen> {
             }),
           ],
           const SizedBox(height: 16),
-          Card(
+          WashiCard(
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [

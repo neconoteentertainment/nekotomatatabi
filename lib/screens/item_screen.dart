@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/local_item.dart';
 import '../services/app_repository.dart';
 import '../widgets/app_scaffold.dart';
+import '../widgets/washi_surface.dart';
 
 class ItemScreen extends StatelessWidget {
   const ItemScreen({super.key, required this.repository});
@@ -12,7 +13,7 @@ class ItemScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
-      title: 'ご当地アイテム',
+      title: '名産品集め',
       child: AnimatedBuilder(
         animation: repository,
         builder: (_, __) => ListView(
@@ -29,7 +30,7 @@ class ItemScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             for (final region in localItemRegions) ...[
-              Card(
+              WashiCard(
                 child: ListTile(
                   leading: CircleAvatar(
                     backgroundColor: AppScaffold.gold.withValues(alpha: .12),
@@ -51,7 +52,7 @@ class ItemScreen extends StatelessWidget {
               const SizedBox(height: 8),
             ],
             const SizedBox(height: 8),
-            const Card(
+            const WashiCard(
               child: ListTile(
                 leading: CircleAvatar(child: Icon(Icons.lock_outline)),
                 title: Text('その他の地域'),
@@ -60,16 +61,12 @@ class ItemScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppScaffold.gold.withValues(alpha: .08),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppScaffold.gold.withValues(alpha: .25)),
-              ),
-              child: const Text(
+            const WashiSurface(
+              padding: EdgeInsets.all(12),
+              borderRadius: 14,
+              child: Text(
                 '※動作確認用として、現在は東海4県のみ各30Pから開始しています。リリース時は0P開始に変更します。',
-                style: TextStyle(color: Colors.white70, fontSize: 12),
+                style: TextStyle(color: WashiSurface.mutedInk, fontSize: 12),
               ),
             ),
           ],
@@ -98,7 +95,7 @@ class _PrefectureScreen extends StatelessWidget {
           itemBuilder: (context, index) {
             final prefecture = prefectures[index];
             final points = repository.pointsForPrefecture(prefecture);
-            return Card(
+            return WashiCard(
               child: ListTile(
                 leading: CircleAvatar(
                   backgroundColor: AppScaffold.gold.withValues(alpha: .12),
@@ -142,7 +139,7 @@ class _LocalItemListScreen extends StatelessWidget {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              Card(
+              WashiCard(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Row(
@@ -168,7 +165,7 @@ class _LocalItemListScreen extends StatelessWidget {
                 final unlocked = repository.isLocalItemUnlocked(item);
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 10),
-                  child: Card(
+                  child: WashiCard(
                     clipBehavior: Clip.antiAlias,
                     child: Padding(
                       padding: const EdgeInsets.all(12),
@@ -188,7 +185,7 @@ class _LocalItemListScreen extends StatelessWidget {
                                   colorBlendMode: unlocked ? null : BlendMode.srcATop,
                                   errorBuilder: (_, __, ___) => const Icon(
                                     Icons.image_not_supported_outlined,
-                                    color: Colors.white38,
+                                    color: WashiSurface.mutedInk,
                                     size: 34,
                                   ),
                                 ),
@@ -219,12 +216,12 @@ class _LocalItemListScreen extends StatelessWidget {
                                   ],
                                 ),
                                 const SizedBox(height: 6),
-                                Text(item.description, style: const TextStyle(color: Colors.white70, height: 1.4)),
+                                Text(item.description, style: const TextStyle(color: WashiSurface.mutedInk, height: 1.4)),
                                 const SizedBox(height: 8),
                                 Text(
                                   unlocked ? '入手済み・カメラで使用できます' : 'あと${item.threshold - points}P',
                                   style: TextStyle(
-                                    color: unlocked ? AppScaffold.gold : Colors.white54,
+                                    color: unlocked ? const Color(0xFF76501F) : WashiSurface.mutedInk,
                                     fontSize: 12,
                                   ),
                                 ),

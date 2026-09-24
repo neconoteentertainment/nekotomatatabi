@@ -6,6 +6,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import '../widgets/app_scaffold.dart';
+import '../widgets/washi_surface.dart';
 
 class TicketStorageScreen extends StatefulWidget {
   const TicketStorageScreen({super.key});
@@ -187,7 +188,7 @@ class _TicketStorageScreenState extends State<TicketStorageScreen> {
                 const Text('画像はこの端末のアプリ内に保存されます。大切なチケットは元画像も残してください。'),
                 const SizedBox(height: 12),
                 if (_folders.isEmpty)
-                  const Card(
+                  const WashiCard(
                     child: Padding(
                       padding: EdgeInsets.all(24),
                       child: Center(child: Text('まだフォルダがありません。')),
@@ -226,7 +227,7 @@ class _FolderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return WashiCard(
       child: ExpansionTile(
         leading: const Icon(Icons.folder_outlined),
         title: Text(p.basename(folder.path), style: const TextStyle(fontWeight: FontWeight.bold)),

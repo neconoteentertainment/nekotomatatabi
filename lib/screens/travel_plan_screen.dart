@@ -12,6 +12,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../models/travel_plan.dart';
 import '../services/app_repository.dart';
 import '../widgets/app_scaffold.dart';
+import '../widgets/washi_surface.dart';
 
 class TravelPlanScreen extends StatefulWidget {
   const TravelPlanScreen({super.key, required this.repository});
@@ -57,7 +58,7 @@ class _TravelPlanScreenState extends State<TravelPlanScreen> {
                   const SizedBox(height: 6),
                   ...List.generate(items.length, (i) {
                     final item = items[i];
-                    return Card(
+                    return WashiCard(
                       child: ListTile(
                         leading: Text(item.time.isEmpty ? '--:--' : item.time),
                         title: Text(item.title),
@@ -253,7 +254,7 @@ class _TravelPlanScreenState extends State<TravelPlanScreen> {
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
-      title: '旅の予定',
+      title: '旅の予定を立てる',
       actions: [
         PopupMenuButton<String>(
           tooltip: 'QRコードを読み取る',
@@ -277,8 +278,8 @@ class _TravelPlanScreenState extends State<TravelPlanScreen> {
             children: [
               FilledButton.icon(onPressed: () => _editPlan(), icon: const Icon(Icons.add), label: const Text('新しい旅の予定を作る')),
               const SizedBox(height: 12),
-              if (plans.isEmpty) const Card(child: Padding(padding: EdgeInsets.all(18), child: Text('まだ予定がありません。旅行当日の時刻と行き先を登録できます。'))),
-              ...plans.map((plan) => Card(
+              if (plans.isEmpty) const WashiCard(child: Padding(padding: EdgeInsets.all(18), child: Text('まだ予定がありません。旅行当日の時刻と行き先を登録できます。'))),
+              ...plans.map((plan) => WashiCard(
                     child: ExpansionTile(
                       leading: const CircleAvatar(child: Icon(Icons.route)),
                       title: Text(plan.title),

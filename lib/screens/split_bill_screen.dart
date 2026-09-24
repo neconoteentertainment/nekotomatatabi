@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../services/receipt_total_detector.dart';
 import '../widgets/app_scaffold.dart';
+import '../widgets/washi_surface.dart';
 
 enum _Rounding { up, down }
 
@@ -69,16 +71,26 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
       if (!Platform.isAndroid && !Platform.isIOS) {
         throw UnsupportedError('文字認識はAndroid・iPhoneで利用できます。金額は手動入力してください。');
       }
-      // 数字を中心に読み取るため、追加の日本語モデル設定が不要なLatinモデルを使用する。
-      final recognizer = TextRecognizer(script: TextRecognitionScript.latin);
+      final recognizer = TextRecognizer(script: TextRecognitionScript.japanese);
       try {
         final result = await recognizer.processImage(InputImage.fromFilePath(picked.path));
-        final lines = <String>[
+        final recognizedLines = [
           for (final block in result.blocks)
-            for (final line in block.lines) line.text,
+            for (final line in block.lines) line,
         ];
-        final amount = _findTotal(lines);
-        final candidates = _findItems(lines);
+        final amount = ReceiptTotalDetector.detect([
+          for (final line in recognizedLines)
+            ReceiptOcrLine(
+              text: line.text,
+              left: line.boundingBox.left,
+              top: line.boundingBox.top,
+              right: line.boundingBox.right,
+              bottom: line.boundingBox.bottom,
+            ),
+        ]);
+        final candidates = _findItems([
+          for (final line in recognizedLines) line.text,
+        ]);
         if (!mounted) return;
         setState(() {
           if (amount != null) _totalController.text = amount.toString();
@@ -103,17 +115,6 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
       if (value != null && value > 0 && value < 100000000) values.add(value);
     }
     return values;
-  }
-
-  int? _findTotal(List<String> lines) {
-    final totalLines = lines.where((line) {
-      final normalized = line.replaceAll(' ', '').toLowerCase();
-      return normalized.contains('合計') || normalized.contains('計') || normalized.contains('total');
-    });
-    final preferred = totalLines.expand(_amountsIn).toList();
-    if (preferred.isNotEmpty) return preferred.reduce((a, b) => a > b ? a : b);
-    final all = lines.expand(_amountsIn).where((value) => value >= 100).toList();
-    return all.isEmpty ? null : all.reduce((a, b) => a > b ? a : b);
   }
 
   List<_BillItem> _findItems(List<String> lines) {
@@ -214,7 +215,7 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Card(
+          WashiCard(
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -266,7 +267,7 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
               ),
             ),
           ),
-          Card(
+          WashiCard(
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -316,7 +317,7 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
               ),
             ),
           ),
-          Card(
+          WashiCard(
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(

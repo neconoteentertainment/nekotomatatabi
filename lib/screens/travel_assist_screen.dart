@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../widgets/app_scaffold.dart';
+import '../widgets/washi_surface.dart';
 import 'split_bill_screen.dart';
 import 'ticket_storage_screen.dart';
 
@@ -28,7 +29,7 @@ class TravelAssistScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          Card(
+          WashiCard(
             child: ListTile(
               contentPadding: const EdgeInsets.all(16),
               leading: const Icon(Icons.folder_copy_outlined, size: 36),
@@ -42,7 +43,7 @@ class TravelAssistScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          Card(
+          WashiCard(
             child: ListTile(
               contentPadding: const EdgeInsets.all(16),
               leading: const Icon(Icons.receipt_long_outlined, size: 36),

@@ -761,12 +761,19 @@ class _CameraScreenState extends State<CameraScreen> {
                             children: [
                               ActionChip(avatar: const Icon(Icons.text_fields), label: const Text('文字追加'), onPressed: () async { await _addText(); if (mounted) setState(() => _showStampPanel = false); }),
                               const SizedBox(width: 8),
-                              ActionChip(
-                                avatar: const Icon(Icons.card_giftcard_outlined),
-                                label: const Text('ご当地'),
-                                onPressed: _chooseLocalItemStamp,
-                              ),
-                              const SizedBox(width: 8),
+                              ...List.generate(4, (i) {
+                                final path = widget.repository.stampPaths[i];
+                                return Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: ActionChip(
+                                    label: Text('スタンプ${i + 1}'),
+                                    avatar: path != null && File(path).existsSync()
+                                        ? CircleAvatar(backgroundImage: FileImage(File(path)))
+                                        : const Icon(Icons.pets),
+                                    onPressed: path == null ? null : () => _addStamp(i),
+                                  ),
+                                );
+                              }),
                               ActionChip(
                                 avatar: Image.asset('assets/camera_stamps/chii.png', width: 24, height: 24),
                                 label: const Text('ちぃ'),
@@ -785,19 +792,12 @@ class _CameraScreenState extends State<CameraScreen> {
                                 onPressed: _addSignboard,
                               ),
                               const SizedBox(width: 8),
-                              ...List.generate(4, (i) {
-                                final path = widget.repository.stampPaths[i];
-                                return Padding(
-                                  padding: const EdgeInsets.only(right: 8),
-                                  child: ActionChip(
-                                    label: Text('猫${i + 1}'),
-                                    avatar: path != null && File(path).existsSync()
-                                        ? CircleAvatar(backgroundImage: FileImage(File(path)))
-                                        : const Icon(Icons.pets),
-                                    onPressed: path == null ? null : () => _addStamp(i),
-                                  ),
-                                );
-                              }),
+                              ActionChip(
+                                avatar: const Icon(Icons.card_giftcard_outlined),
+                                label: const Text('ご当地'),
+                                onPressed: _chooseLocalItemStamp,
+                              ),
+                              const SizedBox(width: 8),
                               if (_selectedOverlayId != null) ...[
                                 ActionChip(avatar: const Icon(Icons.rotate_left), label: const Text('角度を戻す'), onPressed: () {
                                   for (final item in _overlays) {

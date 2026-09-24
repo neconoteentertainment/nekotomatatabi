@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../services/app_repository.dart';
 import '../widgets/app_scaffold.dart';
+import '../widgets/washi_surface.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key, required this.repository});
@@ -17,7 +18,7 @@ class SettingsScreen extends StatelessWidget {
         builder: (context, _) => ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            Card(
+            WashiCard(
               child: Column(
                 children: [
                   SwitchListTile(
@@ -54,7 +55,7 @@ class SettingsScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            const Card(
+            const WashiCard(
               child: ListTile(
                 leading: Icon(Icons.info_outline),
                 title: Text('アプリについて'),

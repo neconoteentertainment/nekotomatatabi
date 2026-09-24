@@ -10,9 +10,25 @@ fi
 # Android/iOS project files are generated on the Mac. Existing app source and Info.plist are preserved.
 flutter create . --platforms=android,ios --org com.neconote --project-name nekotomatatabi
 
+# 日本語レシート認識用のML Kitモデルを追加する。
+if [ -f android/app/build.gradle.kts ] && ! grep -q 'text-recognition-japanese' android/app/build.gradle.kts; then
+  sed -i '' "/^dependencies {/a\\
+    implementation(\"com.google.mlkit:text-recognition-japanese:16.0.1\")
+" android/app/build.gradle.kts
+elif [ -f android/app/build.gradle ] && ! grep -q 'text-recognition-japanese' android/app/build.gradle; then
+  sed -i '' "/^dependencies {/a\\
+    implementation 'com.google.mlkit:text-recognition-japanese:16.0.1'
+" android/app/build.gradle
+fi
+
 # レシート文字認識（ML Kit）の動作要件に合わせてiOS 15.5以上へ統一する。
 if [ -f ios/Podfile ]; then
   sed -i '' -E "s/^#?[[:space:]]*platform :ios, '[0-9.]+'/platform :ios, '15.5'/" ios/Podfile
+  if ! grep -q 'TextRecognitionJapanese' ios/Podfile; then
+    sed -i '' "/^target 'Runner' do/a\\
+  pod 'GoogleMLKit/TextRecognitionJapanese', '~> 9.0.0'
+" ios/Podfile
+  fi
 fi
 if [ -f ios/Runner.xcodeproj/project.pbxproj ]; then
   sed -i '' -E 's/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]+;/IPHONEOS_DEPLOYMENT_TARGET = 15.5;/g' ios/Runner.xcodeproj/project.pbxproj
