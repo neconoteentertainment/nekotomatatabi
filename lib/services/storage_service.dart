@@ -7,12 +7,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/travel_memory.dart';
 import '../models/travel_plan.dart';
+import '../models/travel_expense.dart';
 
 class StorageService {
   // 既存ユーザーのデータをアップデート後も引き継ぐため、キー名は変更しない。
   static const _memoriesKey = 'travel_memories_v1';
   static const _stampPathsKey = 'stamp_paths_v1';
   static const _travelPlansKey = 'travel_plans_v1';
+  static const _travelExpensesKey = 'travel_expenses_v1';
   static const _bgmEnabledKey = 'bgm_enabled_v1';
   static const _bgmTrackKey = 'bgm_track_v1';
 
@@ -101,6 +103,31 @@ class StorageService {
     await prefs.setString(
       _travelPlansKey,
       jsonEncode(plans.map((e) => e.toJson()).toList()),
+    );
+  }
+
+  Future<List<TravelExpense>> loadTravelExpenses() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_travelExpensesKey);
+    if (raw == null || raw.isEmpty) return [];
+    try {
+      final data = jsonDecode(raw) as List<dynamic>;
+      final expenses = data
+          .map((e) => TravelExpense.fromJson(Map<String, dynamic>.from(e as Map)))
+          .where((e) => e.amount > 0)
+          .toList();
+      expenses.sort((a, b) => b.date.compareTo(a.date));
+      return expenses;
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<void> saveTravelExpenses(List<TravelExpense> expenses) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      _travelExpensesKey,
+      jsonEncode(expenses.map((e) => e.toJson()).toList()),
     );
   }
 

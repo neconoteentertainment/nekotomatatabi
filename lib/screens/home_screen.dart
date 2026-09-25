@@ -116,8 +116,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                   image: 'assets/home/card_assist.jpg',
                                   icon: Icons.backpack_outlined,
                                   title: '旅の手助け',
-                                  subtitle: '電子チケット保存と\n割り勘計算',
-                                  onTap: () => _push(const TravelAssistScreen()),
+                                  subtitle: 'チケット・割り勘・\n支出記録',
+                                  onTap: () => _push(TravelAssistScreen(repository: repository)),
                                 ),
                                 _HomeCardData(
                                   image: 'assets/home/card_stamp.png',
@@ -474,7 +474,7 @@ class _HelpDialog extends StatelessWidget {
             '1. 「旅の思い出を記録する」で現在地を取得します。\n\n'
             '2. 周辺候補から訪問した場所を登録します。\n\n'
             '3. 「写真を撮る」で猫スタンプや文字を複数重ねて撮影できます。\n\n'
-            '4. 「旅の手助け」で電子チケット画像の整理や割り勘計算ができます。\n\n'
+            '4. 「旅の手助け」で電子チケットの整理、割り勘計算、旅の支出記録ができます。\n\n'
             '5. スタンプは「スタンプ登録」で4個まで登録できます。\n\n'
             '6. 「旅の予定を立てる」で1日のスケジュールを作成し、QRコードで共有できます。\n\n'
             '7. 「旅の思い出を振り返る」で一覧・都道府県・年月から確認できます。',

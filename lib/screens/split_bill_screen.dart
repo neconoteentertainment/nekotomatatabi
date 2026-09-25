@@ -1,12 +1,9 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
-import 'package:image_picker/image_picker.dart';
 
-import '../services/receipt_total_detector.dart';
+import '../services/app_repository.dart';
 import '../widgets/app_scaffold.dart';
 import '../widgets/washi_surface.dart';
+import 'travel_expense_screen.dart';
 
 enum _Rounding { up, down }
 
@@ -18,14 +15,14 @@ class _BillItem {
 }
 
 class SplitBillScreen extends StatefulWidget {
-  const SplitBillScreen({super.key});
+  const SplitBillScreen({super.key, this.repository});
+  final AppRepository? repository;
 
   @override
   State<SplitBillScreen> createState() => _SplitBillScreenState();
 }
 
 class _SplitBillScreenState extends State<SplitBillScreen> {
-  final _picker = ImagePicker();
   final _totalController = TextEditingController();
   final _people = <TextEditingController>[
     TextEditingController(text: 'Aさん'),
@@ -34,8 +31,6 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
   ];
   final _items = <_BillItem>[];
   _Rounding _rounding = _Rounding.up;
-  bool _recognizing = false;
-  File? _receipt;
 
   @override
   void dispose() {
@@ -57,85 +52,6 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
     if (count <= 0) return 0;
     final value = amount / count;
     return _rounding == _Rounding.up ? value.ceil() : value.floor();
-  }
-
-  Future<void> _selectReceipt(ImageSource source) async {
-    final picked = await _picker.pickImage(source: source, imageQuality: 95);
-    if (picked == null) return;
-    setState(() {
-      _receipt = File(picked.path);
-      _recognizing = true;
-    });
-
-    try {
-      if (!Platform.isAndroid && !Platform.isIOS) {
-        throw UnsupportedError('文字認識はAndroid・iPhoneで利用できます。金額は手動入力してください。');
-      }
-      final recognizer = TextRecognizer(script: TextRecognitionScript.japanese);
-      try {
-        final result = await recognizer.processImage(InputImage.fromFilePath(picked.path));
-        final recognizedLines = [
-          for (final block in result.blocks)
-            for (final line in block.lines) line,
-        ];
-        final amount = ReceiptTotalDetector.detect([
-          for (final line in recognizedLines)
-            ReceiptOcrLine(
-              text: line.text,
-              left: line.boundingBox.left,
-              top: line.boundingBox.top,
-              right: line.boundingBox.right,
-              bottom: line.boundingBox.bottom,
-            ),
-        ]);
-        final candidates = _findItems([
-          for (final line in recognizedLines) line.text,
-        ]);
-        if (!mounted) return;
-        setState(() {
-          if (amount != null) _totalController.text = amount.toString();
-          if (_items.isEmpty) _items.addAll(candidates);
-        });
-        if (amount == null) _message('合計金額を特定できませんでした。金額を手動で入力してください。');
-      } finally {
-        await recognizer.close();
-      }
-    } catch (e) {
-      _message(e.toString().replaceFirst('Unsupported operation: ', ''));
-    } finally {
-      if (mounted) setState(() => _recognizing = false);
-    }
-  }
-
-  List<int> _amountsIn(String line) {
-    final values = <int>[];
-    for (final match in RegExp(r'(?:¥|￥)?\s*([0-9][0-9,]{0,8})\s*(?:円)?').allMatches(line)) {
-      final raw = match.group(1)?.replaceAll(',', '');
-      final value = int.tryParse(raw ?? '');
-      if (value != null && value > 0 && value < 100000000) values.add(value);
-    }
-    return values;
-  }
-
-  List<_BillItem> _findItems(List<String> lines) {
-    final items = <_BillItem>[];
-    for (final line in lines) {
-      final normalized = line.replaceAll(' ', '').toLowerCase();
-      if (normalized.contains('合計') || normalized.contains('total') || normalized.contains('お預') || normalized.contains('釣')) continue;
-      final amounts = _amountsIn(line);
-      if (amounts.isEmpty) continue;
-      final amount = amounts.last;
-      final name = line.replaceAll(RegExp(r'(?:¥|￥)?\s*[0-9][0-9,]{0,8}\s*(?:円)?'), '').trim();
-      if (name.isEmpty) continue;
-      items.add(_BillItem(name: name, amount: amount, people: <int>{}));
-      if (items.length >= 30) break;
-    }
-    return items;
-  }
-
-  void _message(String text) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
   }
 
   void _addPerson() {
@@ -206,6 +122,24 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
     return totals;
   }
 
+  Future<void> _registerExpense(int amount, String memo) async {
+    final repository = widget.repository;
+    if (repository == null || amount <= 0) return;
+    final expense = await showExpenseEditorDialog(
+      context,
+      initialAmount: amount,
+      initialMemo: memo,
+      plans: repository.travelPlans,
+    );
+    if (expense == null) return;
+    await repository.saveTravelExpense(expense);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('自分の支出として登録しました。')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final equalShare = _divide(_total, _people.length);
@@ -221,45 +155,14 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text('1. レシートを読み取る', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text('1. 合計金額を入力', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: FilledButton.icon(
-                          onPressed: _recognizing ? null : () => _selectReceipt(ImageSource.camera),
-                          icon: const Icon(Icons.camera_alt_outlined),
-                          label: const Text('撮影'),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: _recognizing ? null : () => _selectReceipt(ImageSource.gallery),
-                          icon: const Icon(Icons.photo_library_outlined),
-                          label: const Text('画像を選ぶ'),
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (_recognizing) const Padding(
-                    padding: EdgeInsets.all(12),
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
-                  if (_receipt != null) ...[
-                    const SizedBox(height: 10),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.file(_receipt!, height: 160, fit: BoxFit.cover),
-                    ),
-                  ],
-                  const SizedBox(height: 12),
                   TextField(
                     controller: _totalController,
                     keyboardType: TextInputType.number,
                     onChanged: (_) => setState(() {}),
                     decoration: const InputDecoration(
-                      labelText: '合計金額（認識ミスの場合は修正）',
+                      labelText: '合計金額',
                       suffixText: '円',
                     ),
                   ),
@@ -313,6 +216,17 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
                       '合計との差: ${(equalShare * _people.length - _total).toString()}円',
                       textAlign: TextAlign.center,
                     ),
+                  if (_total > 0 && widget.repository != null) ...[
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: () => _registerExpense(
+                        equalShare,
+                        '割り勘（${_people.length}人）',
+                      ),
+                      icon: const Icon(Icons.savings_outlined),
+                      label: Text('自分の支出 ${equalShare}円を登録'),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -331,7 +245,7 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
                   ),
                   const Text('支払う人にチェックを付けると、その商品の金額を選択した人だけで割ります。'),
                   const SizedBox(height: 10),
-                  if (_items.isEmpty) const Text('商品はまだありません。レシート読取または＋ボタンから追加できます。'),
+                  if (_items.isEmpty) const Text('商品はまだありません。＋ボタンから追加できます。'),
                   for (var itemIndex = 0; itemIndex < _items.length; itemIndex++) ...[
                     const Divider(),
                     Row(
@@ -369,7 +283,21 @@ class _SplitBillScreenState extends State<SplitBillScreen> {
                         dense: true,
                         leading: const Icon(Icons.person_outline),
                         title: Text(_personName(i)),
-                        trailing: Text('${itemTotals[i]}円', style: const TextStyle(fontWeight: FontWeight.bold)),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text('${itemTotals[i]}円', style: const TextStyle(fontWeight: FontWeight.bold)),
+                            if (itemTotals[i] > 0 && widget.repository != null)
+                              IconButton(
+                                tooltip: 'この金額を自分の支出へ登録',
+                                onPressed: () => _registerExpense(
+                                  itemTotals[i],
+                                  '割り勘（${_personName(i)}）',
+                                ),
+                                icon: const Icon(Icons.savings_outlined),
+                              ),
+                          ],
+                        ),
                       ),
                   ],
                 ],

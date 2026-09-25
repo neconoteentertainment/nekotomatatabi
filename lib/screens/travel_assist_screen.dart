@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 
 import '../widgets/app_scaffold.dart';
 import '../widgets/washi_surface.dart';
+import '../services/app_repository.dart';
 import 'split_bill_screen.dart';
 import 'ticket_storage_screen.dart';
+import 'travel_expense_screen.dart';
 
 class TravelAssistScreen extends StatelessWidget {
-  const TravelAssistScreen({super.key});
+  const TravelAssistScreen({super.key, required this.repository});
+  final AppRepository repository;
 
   void _push(BuildContext context, Widget screen) {
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));
@@ -50,10 +53,24 @@ class TravelAssistScreen extends StatelessWidget {
               title: const Text('割り勘計算', style: TextStyle(fontWeight: FontWeight.bold)),
               subtitle: const Padding(
                 padding: EdgeInsets.only(top: 6),
-                child: Text('レシートの合計金額を読み取り、人数・端数処理・商品ごとの担当を指定して計算します。'),
+                child: Text('金額と人数を手入力し、端数処理・商品ごとの担当を指定して計算します。'),
               ),
               trailing: const Icon(Icons.chevron_right),
-              onTap: () => _push(context, const SplitBillScreen()),
+              onTap: () => _push(context, SplitBillScreen(repository: repository)),
+            ),
+          ),
+          const SizedBox(height: 10),
+          WashiCard(
+            child: ListTile(
+              contentPadding: const EdgeInsets.all(16),
+              leading: const Icon(Icons.savings_outlined, size: 36),
+              title: const Text('旅の支出記録', style: TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: const Padding(
+                padding: EdgeInsets.only(top: 6),
+                child: Text('食事・交通・宿泊などの支出を記録し、月別・カテゴリ別・旅ごとに確認できます。'),
+              ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => _push(context, TravelExpenseScreen(repository: repository)),
             ),
           ),
         ],

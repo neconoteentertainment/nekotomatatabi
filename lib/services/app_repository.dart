@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import '../models/local_item.dart';
 import '../models/travel_memory.dart';
 import '../models/travel_plan.dart';
+import '../models/travel_expense.dart';
 import 'audio_service.dart';
 import 'storage_service.dart';
 
@@ -16,6 +17,7 @@ class AppRepository extends ChangeNotifier {
   List<TravelMemory> _memories = [];
   List<String?> _stampPaths = List<String?>.filled(4, null);
   List<TravelPlan> _travelPlans = [];
+  List<TravelExpense> _travelExpenses = [];
   bool _ready = false;
   bool _bgmEnabled = true;
   String _bgmTrack = 'umibe';
@@ -25,6 +27,7 @@ class AppRepository extends ChangeNotifier {
   List<TravelMemory> get memories => List.unmodifiable(_memories);
   List<String?> get stampPaths => List.unmodifiable(_stampPaths);
   List<TravelPlan> get travelPlans => List.unmodifiable(_travelPlans);
+  List<TravelExpense> get travelExpenses => List.unmodifiable(_travelExpenses);
   bool get ready => _ready;
   bool get bgmEnabled => _bgmEnabled;
   String get bgmTrack => _bgmTrack;
@@ -71,6 +74,7 @@ class AppRepository extends ChangeNotifier {
     _memories = await _storage.loadMemories();
     _stampPaths = await _storage.loadStampPaths();
     _travelPlans = await _storage.loadTravelPlans();
+    _travelExpenses = await _storage.loadTravelExpenses();
     _bgmEnabled = await _storage.loadBgmEnabled();
     _bgmTrack = await _storage.loadBgmTrack();
     await _audio.configure(
@@ -167,6 +171,24 @@ class AppRepository extends ChangeNotifier {
   Future<void> deleteTravelPlan(String planId) async {
     _travelPlans.removeWhere((e) => e.id == planId);
     await _storage.saveTravelPlans(_travelPlans);
+    notifyListeners();
+  }
+
+  Future<void> saveTravelExpense(TravelExpense expense) async {
+    final index = _travelExpenses.indexWhere((e) => e.id == expense.id);
+    if (index >= 0) {
+      _travelExpenses[index] = expense;
+    } else {
+      _travelExpenses.add(expense);
+    }
+    _travelExpenses.sort((a, b) => b.date.compareTo(a.date));
+    await _storage.saveTravelExpenses(_travelExpenses);
+    notifyListeners();
+  }
+
+  Future<void> deleteTravelExpense(String expenseId) async {
+    _travelExpenses.removeWhere((e) => e.id == expenseId);
+    await _storage.saveTravelExpenses(_travelExpenses);
     notifyListeners();
   }
 

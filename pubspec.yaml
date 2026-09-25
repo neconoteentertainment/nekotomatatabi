@@ -1,7 +1,7 @@
 name: nekotomatatabi
 description: ねことまた旅 - 猫と一緒に旅した気分で思い出を残す旅行記録アプリ
 publish_to: 'none'
-version: 0.12.1+14
+version: 0.13.0+15
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
@@ -26,7 +26,6 @@ dependencies:
   mobile_scanner: ^7.1.2
   gal: ^2.3.3
   audioplayers: ^6.5.1
-  google_mlkit_text_recognition: ^0.15.0
 
 dev_dependencies:
   flutter_test:
