@@ -90,6 +90,13 @@ class _CameraScreenState extends State<CameraScreen> {
     DeviceOrientation.landscapeRight,
   ];
 
+  // iOSではUIをlandscapeRightへ固定した直後もCameraPreviewの映像だけが
+  // 時計回りに90度ずれる端末がある。UIは回さず、映像レイヤーだけを
+  // 反時計回りへ戻す。保存画像の縦横補正にも同じ方向を使う。
+  bool get _isLandscapeMode => _orientationIndex == 1;
+  int get _previewCorrectionQuarterTurns => _isLandscapeMode ? 3 : 0;
+  double get _savedImageCorrectionDegrees => _isLandscapeMode ? -90 : 90;
+
   @override
   void initState() {
     super.initState();
@@ -528,13 +535,14 @@ class _CameraScreenState extends State<CameraScreen> {
     if (previewSize.width <= 1 || previewSize.height <= 1) return oriented;
 
     // 通常はJPEGのEXIF方向をbakeOrientationが反映する。端末やOSにより
-    // EXIFが付かず縦横だけが残る場合は、表示中の向きへ合わせて補正する。
+    // EXIFが付かず縦横だけが残る場合は、プレビューと同じ回転方向で
+    // 表示中の向きへ合わせる。
     final targetLandscape = previewSize.width > previewSize.height;
     final sourceLandscape = oriented.width > oriented.height;
     if (targetLandscape != sourceLandscape) {
       oriented = img.copyRotate(
         oriented,
-        angle: targetLandscape ? 90 : -90,
+        angle: targetLandscape ? _savedImageCorrectionDegrees : 90,
         interpolation: img.Interpolation.linear,
       );
     }
@@ -693,7 +701,10 @@ class _CameraScreenState extends State<CameraScreen> {
                                   child: SizedBox(
                                     width: previewWidth,
                                     height: previewHeight,
-                                    child: CameraPreview(controller),
+                                    child: RotatedBox(
+                                      quarterTurns: _previewCorrectionQuarterTurns,
+                                      child: CameraPreview(controller),
+                                    ),
                                   ),
                                 ),
                               );
