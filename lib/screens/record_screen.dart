@@ -160,6 +160,7 @@ class _RecordScreenState extends State<RecordScreen> {
   Widget build(BuildContext context) {
     return AppScaffold(
       title: '旅の思い出を記録する',
+      subtitle: 'MEMORIES OF JOURNEYS',
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -243,17 +244,23 @@ class _RecordScreenState extends State<RecordScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      color: AppScaffold.gold.withValues(alpha: .22),
                       borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppScaffold.gold.withValues(alpha: .55),
+                      ),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.place_outlined),
+                        const Icon(Icons.place_outlined, color: WashiSurface.ink),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             '最新の訪問地: ${widget.repository.memories.first.placeName}',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                              color: WashiSurface.ink,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ],

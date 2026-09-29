@@ -69,6 +69,7 @@ class _CameraScreenState extends State<CameraScreen> {
   int? _selectedOverlayId;
   bool _saving = false;
   bool _initializing = true;
+  bool _changingOrientation = false;
   String? _cameraError;
   final _storage = StorageService();
 
@@ -86,7 +87,6 @@ class _CameraScreenState extends State<CameraScreen> {
   int _orientationIndex = 0;
   static const _orientations = <DeviceOrientation>[
     DeviceOrientation.portraitUp,
-    DeviceOrientation.landscapeLeft,
     DeviceOrientation.landscapeRight,
   ];
 
@@ -166,13 +166,29 @@ class _CameraScreenState extends State<CameraScreen> {
 
 
   Future<void> _cycleOrientation() async {
+    if (_changingOrientation) return;
     final nextIndex = (_orientationIndex + 1) % _orientations.length;
     final next = _orientations[nextIndex];
-    setState(() => _orientationIndex = nextIndex);
-    await SystemChrome.setPreferredOrientations([next]);
+    setState(() {
+      _orientationIndex = nextIndex;
+      _changingOrientation = true;
+    });
+
+    // カメラの向きを固定したまま画面だけを回転すると、iOSでは
+    // プレビューが180度反転することがある。いったん固定を解除し、
+    // 画面回転が反映されてから撮影方向を同じ向きで固定し直す。
     try {
-      await _controller?.lockCaptureOrientation(next);
-    } catch (_) {}
+      try {
+        await _controller?.unlockCaptureOrientation();
+      } catch (_) {}
+      await SystemChrome.setPreferredOrientations([next]);
+      await Future<void>.delayed(const Duration(milliseconds: 250));
+      try {
+        await _controller?.lockCaptureOrientation(next);
+      } catch (_) {}
+    } finally {
+      if (mounted) setState(() => _changingOrientation = false);
+    }
   }
 
   Future<void> _switchCamera() async {
@@ -840,7 +856,7 @@ class _CameraScreenState extends State<CameraScreen> {
                           ),
                           const SizedBox(width: 18),
                           IconButton.filledTonal(
-                            onPressed: _cycleOrientation,
+                            onPressed: _changingOrientation ? null : _cycleOrientation,
                             tooltip: '画面を回転',
                             icon: const Icon(Icons.screen_rotation),
                           ),

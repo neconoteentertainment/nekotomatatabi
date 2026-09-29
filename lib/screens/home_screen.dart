@@ -91,21 +91,21 @@ class _HomeScreenState extends State<HomeScreen> {
                                   image: 'assets/home/card_record.jpg',
                                   icon: Icons.location_on_outlined,
                                   title: '旅の思い出を\n記録する',
-                                  subtitle: 'GPSで観光地を探して\n訪問を保存',
+                                  subtitle: '訪れた観光地と\n写真を保存',
                                   onTap: () => _push(RecordScreen(repository: repository)),
                                 ),
                                 _HomeCardData(
                                   image: 'assets/home/card_history.jpg',
                                   icon: Icons.photo_library_outlined,
                                   title: '旅の思い出を\n振り返る',
-                                  subtitle: '日本地図・年月・写真\nから振り返る',
+                                  subtitle: '過去の写真を確認',
                                   onTap: () => _push(HistoryScreen(repository: repository)),
                                 ),
                                 _HomeCardData(
                                   image: 'assets/home/card_plan.jpg',
                                   icon: Icons.calendar_month_outlined,
                                   title: '旅の予定を\n立てる',
-                                  subtitle: '1日のスケジュール作成\nQR共有',
+                                  subtitle: 'スケジュール作成\nQRで友達と共有',
                                   onTap: () => _push(TravelPlanScreen(repository: repository)),
                                 ),
                               ],
@@ -116,7 +116,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   image: 'assets/home/card_assist.jpg',
                                   icon: Icons.backpack_outlined,
                                   title: '旅の手助け',
-                                  subtitle: 'チケット・割り勘・\n支出記録',
+                                  subtitle: 'webページ登録\n画像保存\n支出記録',
                                   onTap: () => _push(TravelAssistScreen(repository: repository)),
                                 ),
                                 _HomeCardData(
@@ -124,7 +124,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   imageAlignment: Alignment.center,
                                   icon: Icons.pets,
                                   title: 'スタンプ登録',
-                                  subtitle: 'お気に入りの猫画像を\n4個まで登録',
+                                  subtitle: '写真で使える\nお気に入り画像を\n登録',
                                   onTap: () => _push(StampEditorScreen(repository: repository)),
                                 ),
                                 _HomeCardData(
@@ -132,7 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   imageAlignment: Alignment.center,
                                   icon: Icons.card_giftcard_outlined,
                                   title: '名産品集め',
-                                  subtitle: '旅先で集めたポイントで\nご当地アイテムを解放',
+                                  subtitle: '観光地を巡って\n名産品をゲット',
                                   onTap: () => _push(ItemScreen(repository: repository)),
                                 ),
                               ],
@@ -151,7 +151,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   image: 'assets/home/card_help.png',
                                   icon: Icons.help_outline,
                                   title: 'アプリの\n使用方法',
-                                  subtitle: 'ねことまた旅の\n使い方を見る',
+                                  subtitle: 'ねことまた旅の\n使い方を確認',
                                   onTap: () => showDialog<void>(
                                     context: context,
                                     builder: (_) => const _HelpDialog(),
@@ -161,7 +161,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   image: 'assets/home/card_hp.png',
                                   icon: Icons.public,
                                   title: '制作者のHP',
-                                  subtitle: '最新情報を\n確認する',
+                                  subtitle: '制作者のX\n(旧Twitter)',
                                   onTap: () async {
                                     final uri = Uri.parse('https://example.com');
                                     if (!await launchUrl(uri, mode: LaunchMode.externalApplication) && context.mounted) {
