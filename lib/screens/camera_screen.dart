@@ -122,9 +122,6 @@ class _CameraScreenState extends State<CameraScreen> {
       imageFormatGroup: ImageFormatGroup.jpeg,
     );
     await controller.initialize();
-    try {
-      await controller.lockCaptureOrientation(_orientations[_orientationIndex]);
-    } catch (_) {}
 
     double minZoom = 1.0;
     double maxZoom = 1.0;
@@ -174,18 +171,13 @@ class _CameraScreenState extends State<CameraScreen> {
       _changingOrientation = true;
     });
 
-    // カメラの向きを固定したまま画面だけを回転すると、iOSでは
-    // プレビューが180度反転することがある。いったん固定を解除し、
-    // 画面回転が反映されてから撮影方向を同じ向きで固定し直す。
+    // UIの表示方向だけを切り替える。CameraPreviewと撮影画像の向きは
+    // カメラプラグインが端末センサーから取得する方向へ追従させる。
+    // lockCaptureOrientationを使うと、iOS横画面でプレビューだけが
+    // 90度ずれる場合があるため、ここでは撮影方向を固定しない。
     try {
-      try {
-        await _controller?.unlockCaptureOrientation();
-      } catch (_) {}
       await SystemChrome.setPreferredOrientations([next]);
-      await Future<void>.delayed(const Duration(milliseconds: 250));
-      try {
-        await _controller?.lockCaptureOrientation(next);
-      } catch (_) {}
+      await Future<void>.delayed(const Duration(milliseconds: 180));
     } finally {
       if (mounted) setState(() => _changingOrientation = false);
     }
@@ -532,8 +524,20 @@ class _CameraScreenState extends State<CameraScreen> {
   }
 
   img.Image _cropToPreview(img.Image source, Size previewSize) {
-    final oriented = img.bakeOrientation(source);
+    var oriented = img.bakeOrientation(source);
     if (previewSize.width <= 1 || previewSize.height <= 1) return oriented;
+
+    // 通常はJPEGのEXIF方向をbakeOrientationが反映する。端末やOSにより
+    // EXIFが付かず縦横だけが残る場合は、表示中の向きへ合わせて補正する。
+    final targetLandscape = previewSize.width > previewSize.height;
+    final sourceLandscape = oriented.width > oriented.height;
+    if (targetLandscape != sourceLandscape) {
+      oriented = img.copyRotate(
+        oriented,
+        angle: targetLandscape ? 90 : -90,
+        interpolation: img.Interpolation.linear,
+      );
+    }
 
     final targetAspect = previewSize.width / previewSize.height;
     final sourceAspect = oriented.width / oriented.height;
@@ -658,8 +662,7 @@ class _CameraScreenState extends State<CameraScreen> {
     final controller = _controller;
     return Scaffold(
       backgroundColor: Colors.black,
-      body: SafeArea(
-        child: LayoutBuilder(
+      body: LayoutBuilder(
           builder: (context, constraints) {
             final size = Size(constraints.maxWidth, constraints.maxHeight);
             return Stack(
@@ -683,13 +686,15 @@ class _CameraScreenState extends State<CameraScreen> {
                               final portrait = size.height >= size.width;
                               final previewWidth = portrait ? raw.height : raw.width;
                               final previewHeight = portrait ? raw.width : raw.height;
-                              return FittedBox(
-                                fit: BoxFit.cover,
-                                alignment: Alignment.center,
-                                child: SizedBox(
-                                  width: previewWidth,
-                                  height: previewHeight,
-                                  child: CameraPreview(controller),
+                              return ClipRect(
+                                child: FittedBox(
+                                  fit: BoxFit.cover,
+                                  alignment: Alignment.center,
+                                  child: SizedBox(
+                                    width: previewWidth,
+                                    height: previewHeight,
+                                    child: CameraPreview(controller),
+                                  ),
                                 ),
                               );
                             },
@@ -709,22 +714,25 @@ class _CameraScreenState extends State<CameraScreen> {
                   top: 8,
                   left: 8,
                   right: 8,
-                  child: Row(
-                    children: [
-                      IconButton.filledTonal(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(16)),
-                        child: Text('${_zoom.toStringAsFixed(1)}x', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                      ),
-                      const SizedBox(width: 6),
-                      IconButton.filledTonal(onPressed: _cycleFlash, tooltip: 'フラッシュ', icon: Icon(_flashIcon)),
-                      if (_cameras.length > 1) ...[
+                  child: SafeArea(
+                    bottom: false,
+                    child: Row(
+                      children: [
+                        IconButton.filledTonal(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(16)),
+                          child: Text('${_zoom.toStringAsFixed(1)}x', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        ),
                         const SizedBox(width: 6),
-                        IconButton.filledTonal(onPressed: _switchCamera, tooltip: '前後カメラ切替', icon: const Icon(Icons.cameraswitch)),
+                        IconButton.filledTonal(onPressed: _cycleFlash, tooltip: 'フラッシュ', icon: Icon(_flashIcon)),
+                        if (_cameras.length > 1) ...[
+                          const SizedBox(width: 6),
+                          IconButton.filledTonal(onPressed: _switchCamera, tooltip: '前後カメラ切替', icon: const Icon(Icons.cameraswitch)),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
                 if (_maxExposure > _minExposure)
@@ -764,9 +772,12 @@ class _CameraScreenState extends State<CameraScreen> {
                   left: 0,
                   right: 0,
                   bottom: 8,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
+                  child: SafeArea(
+                    top: false,
+                    minimum: const EdgeInsets.only(bottom: 8),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
                       if (_showStampPanel)
                         Container(
                           color: Colors.black54,
@@ -864,13 +875,13 @@ class _CameraScreenState extends State<CameraScreen> {
                       ),
                       const SizedBox(height: 4),
                       const Text('背景をピンチ: ズーム / タップ: フォーカス / スタンプを2本指: 拡大縮小・回転', style: TextStyle(color: Colors.white70, fontSize: 11)),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ],
             );
           },
-        ),
       ),
     );
   }
