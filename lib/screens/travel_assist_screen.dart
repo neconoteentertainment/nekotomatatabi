@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../widgets/app_scaffold.dart';
 import '../widgets/washi_surface.dart';
 import '../services/app_repository.dart';
-import 'split_bill_screen.dart';
+import 'favorite_sites_screen.dart';
 import 'ticket_storage_screen.dart';
 import 'travel_expense_screen.dart';
 
@@ -19,19 +19,10 @@ class TravelAssistScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppScaffold(
       title: '旅の手助け',
+      subtitle: 'JOURNEY GUIDE',
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: Image.asset(
-              'assets/home/card_assist.jpg',
-              height: 190,
-              width: double.infinity,
-              fit: BoxFit.cover,
-            ),
-          ),
-          const SizedBox(height: 16),
           WashiCard(
             child: ListTile(
               contentPadding: const EdgeInsets.all(16),
@@ -49,14 +40,14 @@ class TravelAssistScreen extends StatelessWidget {
           WashiCard(
             child: ListTile(
               contentPadding: const EdgeInsets.all(16),
-              leading: const Icon(Icons.receipt_long_outlined, size: 36),
-              title: const Text('割り勘計算', style: TextStyle(fontWeight: FontWeight.bold)),
+              leading: const Icon(Icons.bookmarks_outlined, size: 36),
+              title: const Text('お気に入りのサイト', style: TextStyle(fontWeight: FontWeight.bold)),
               subtitle: const Padding(
                 padding: EdgeInsets.only(top: 6),
-                child: Text('金額と人数を手入力し、端数処理・商品ごとの担当を指定して計算します。'),
+                child: Text('観光地やお店のURLを47都道府県別に保存し、QRコードで共有できます。'),
               ),
               trailing: const Icon(Icons.chevron_right),
-              onTap: () => _push(context, SplitBillScreen(repository: repository)),
+              onTap: () => _push(context, FavoriteSitesScreen(repository: repository)),
             ),
           ),
           const SizedBox(height: 10),

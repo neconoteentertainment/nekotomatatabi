@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 import '../models/local_item.dart';
+import '../models/favorite_site.dart';
 import '../models/travel_memory.dart';
 import '../models/travel_plan.dart';
 import '../models/travel_expense.dart';
@@ -18,6 +19,7 @@ class AppRepository extends ChangeNotifier {
   List<String?> _stampPaths = List<String?>.filled(4, null);
   List<TravelPlan> _travelPlans = [];
   List<TravelExpense> _travelExpenses = [];
+  List<FavoriteSite> _favoriteSites = [];
   bool _ready = false;
   bool _bgmEnabled = true;
   String _bgmTrack = 'umibe';
@@ -28,6 +30,7 @@ class AppRepository extends ChangeNotifier {
   List<String?> get stampPaths => List.unmodifiable(_stampPaths);
   List<TravelPlan> get travelPlans => List.unmodifiable(_travelPlans);
   List<TravelExpense> get travelExpenses => List.unmodifiable(_travelExpenses);
+  List<FavoriteSite> get favoriteSites => List.unmodifiable(_favoriteSites);
   bool get ready => _ready;
   bool get bgmEnabled => _bgmEnabled;
   String get bgmTrack => _bgmTrack;
@@ -75,6 +78,7 @@ class AppRepository extends ChangeNotifier {
     _stampPaths = await _storage.loadStampPaths();
     _travelPlans = await _storage.loadTravelPlans();
     _travelExpenses = await _storage.loadTravelExpenses();
+    _favoriteSites = await _storage.loadFavoriteSites();
     _bgmEnabled = await _storage.loadBgmEnabled();
     _bgmTrack = await _storage.loadBgmTrack();
     await _audio.configure(
@@ -190,6 +194,46 @@ class AppRepository extends ChangeNotifier {
     _travelExpenses.removeWhere((e) => e.id == expenseId);
     await _storage.saveTravelExpenses(_travelExpenses);
     notifyListeners();
+  }
+
+  List<FavoriteSite> favoriteSitesFor(String prefecture) => _favoriteSites
+      .where((site) => site.prefecture == prefecture)
+      .toList(growable: false);
+
+  Future<void> saveFavoriteSite(FavoriteSite site) async {
+    final index = _favoriteSites.indexWhere((entry) => entry.id == site.id);
+    if (index >= 0) {
+      _favoriteSites[index] = site;
+    } else {
+      _favoriteSites.insert(0, site);
+    }
+    await _storage.saveFavoriteSites(_favoriteSites);
+    notifyListeners();
+  }
+
+  Future<void> deleteFavoriteSite(String id) async {
+    _favoriteSites.removeWhere((site) => site.id == id);
+    await _storage.saveFavoriteSites(_favoriteSites);
+    notifyListeners();
+  }
+
+  Future<int> importFavoriteSites(Iterable<FavoriteSite> sites) async {
+    var added = 0;
+    for (final site in sites) {
+      final duplicated = _favoriteSites.any(
+        (entry) =>
+            entry.prefecture == site.prefecture && entry.url == site.url,
+      );
+      if (!duplicated) {
+        _favoriteSites.insert(0, site);
+        added++;
+      }
+    }
+    if (added > 0) {
+      await _storage.saveFavoriteSites(_favoriteSites);
+      notifyListeners();
+    }
+    return added;
   }
 
   Future<void> setStamp(int index, File source) async {

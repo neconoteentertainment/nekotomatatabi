@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/travel_memory.dart';
 import '../models/travel_plan.dart';
 import '../models/travel_expense.dart';
+import '../models/favorite_site.dart';
 
 class StorageService {
   // 既存ユーザーのデータをアップデート後も引き継ぐため、キー名は変更しない。
@@ -15,6 +16,7 @@ class StorageService {
   static const _stampPathsKey = 'stamp_paths_v1';
   static const _travelPlansKey = 'travel_plans_v1';
   static const _travelExpensesKey = 'travel_expenses_v1';
+  static const _favoriteSitesKey = 'favorite_sites_v1';
   static const _bgmEnabledKey = 'bgm_enabled_v1';
   static const _bgmTrackKey = 'bgm_track_v1';
 
@@ -128,6 +130,32 @@ class StorageService {
     await prefs.setString(
       _travelExpensesKey,
       jsonEncode(expenses.map((e) => e.toJson()).toList()),
+    );
+  }
+
+  Future<List<FavoriteSite>> loadFavoriteSites() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_favoriteSitesKey);
+    if (raw == null || raw.isEmpty) return [];
+    try {
+      final data = jsonDecode(raw) as List<dynamic>;
+      final sites = data
+          .map((entry) =>
+              FavoriteSite.fromJson(Map<String, dynamic>.from(entry as Map)))
+          .where((site) => site.prefecture.isNotEmpty && site.url.isNotEmpty)
+          .toList();
+      sites.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return sites;
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<void> saveFavoriteSites(List<FavoriteSite> sites) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      _favoriteSitesKey,
+      jsonEncode(sites.map((site) => site.toJson()).toList(growable: false)),
     );
   }
 
