@@ -4,7 +4,9 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../services/ad_service.dart';
 
 /// 画面幅に合うGoogle公式テストバナー。
-/// 非対応OS・未同意・読み込み失敗時は表示領域ごと隠します。
+///
+/// 対応OSでは読み込み前から広告枠の高さを確保し、広告の成否によって
+/// ページ本体が伸縮しないようにします。
 class AppBannerAd extends StatefulWidget {
   const AppBannerAd({
     super.key,
@@ -20,6 +22,8 @@ class AppBannerAd extends StatefulWidget {
 }
 
 class _AppBannerAdState extends State<AppBannerAd> {
+  static const double _maxAdHeight = 60;
+
   BannerAd? _banner;
   int? _loadedWidth;
   int? _loadingWidth;
@@ -41,10 +45,31 @@ class _AppBannerAdState extends State<AppBannerAd> {
     _loadingWidth = width;
     _failedWidth = null;
 
-    final size = await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
+    final adaptiveSize =
+        await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
       width,
     );
-    if (!mounted || size == null || _loadingWidth != width) return;
+    if (!mounted || _loadingWidth != width) return;
+    if (adaptiveSize == null) {
+      setState(() {
+        _loadingWidth = null;
+        _failedWidth = width;
+      });
+      return;
+    }
+
+    // 大画面で広告が固定枠より高くなる場合は、標準バナーへ切り替える。
+    // これにより広告が本文へはみ出したり、本文を押し出したりしない。
+    final size = adaptiveSize.height <= _maxAdHeight
+        ? adaptiveSize
+        : AdSize.banner;
+    if (size.width > width) {
+      setState(() {
+        _loadingWidth = null;
+        _failedWidth = width;
+      });
+      return;
+    }
 
     final previous = _banner;
     final banner = BannerAd(
@@ -85,42 +110,45 @@ class _AppBannerAdState extends State<AppBannerAd> {
     final service = AdService.instance;
     if (!service.isSupported) return const SizedBox.shrink();
 
-    return ValueListenableBuilder<bool>(
-      valueListenable: service.canLoadAds,
-      builder: (context, allowed, _) {
-        if (!allowed) return const SizedBox.shrink();
-        return SafeArea(
-          top: false,
-          child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: widget.horizontalPadding,
-              vertical: widget.verticalPadding,
-            ),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final width = constraints.maxWidth.floor();
-                if (_loadedWidth != width &&
-                    _loadingWidth != width &&
-                    _failedWidth != width) {
-                  WidgetsBinding.instance
-                      .addPostFrameCallback((_) => _load(width));
-                }
-                final banner = _banner;
-                if (banner == null || _loadedWidth != width) {
-                  return const SizedBox.shrink();
-                }
-                return Center(
-                  child: SizedBox(
-                    width: banner.size.width.toDouble(),
-                    height: banner.size.height.toDouble(),
-                    child: AdWidget(ad: banner),
-                  ),
-                );
-              },
-            ),
+    return SafeArea(
+      top: false,
+      child: SizedBox(
+        height: _maxAdHeight + widget.verticalPadding * 2,
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: widget.horizontalPadding,
+            vertical: widget.verticalPadding,
           ),
-        );
-      },
+          child: ValueListenableBuilder<bool>(
+            valueListenable: service.canLoadAds,
+            builder: (context, allowed, _) {
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  final width = constraints.maxWidth.floor();
+                  if (allowed &&
+                      _loadedWidth != width &&
+                      _loadingWidth != width &&
+                      _failedWidth != width) {
+                    WidgetsBinding.instance
+                        .addPostFrameCallback((_) => _load(width));
+                  }
+                  final banner = _banner;
+                  if (banner == null || _loadedWidth != width) {
+                    return const SizedBox.expand();
+                  }
+                  return Center(
+                    child: SizedBox(
+                      width: banner.size.width.toDouble(),
+                      height: banner.size.height.toDouble(),
+                      child: AdWidget(ad: banner),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ),
     );
   }
 }
