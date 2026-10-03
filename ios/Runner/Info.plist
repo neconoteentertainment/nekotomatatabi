@@ -6,6 +6,9 @@
 	<true/>
 	<key>CFBundleDisplayName</key>
 	<string>ねことまた旅</string>
+	<!-- Google公式テスト用AdMobアプリID。本番公開前に実IDへ差し替えます。 -->
+	<key>GADApplicationIdentifier</key>
+	<string>ca-app-pub-3940256099942544~1458002511</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

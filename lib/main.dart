@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'screens/home_screen.dart';
+import 'services/ad_service.dart';
 import 'services/app_repository.dart';
 import 'services/storage_service.dart';
 import 'widgets/app_scaffold.dart';
@@ -28,6 +29,9 @@ class _NekotoMataTabiAppState extends State<NekotoMataTabiApp>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AdService.instance.initialize();
+    });
   }
 
   @override

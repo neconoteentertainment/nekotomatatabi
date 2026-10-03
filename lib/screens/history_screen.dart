@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../models/travel_memory.dart';
 import '../services/app_repository.dart';
+import '../widgets/app_banner_ad.dart';
 import '../widgets/washi_surface.dart';
 
 class HistoryScreen extends StatefulWidget {
@@ -36,6 +37,7 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
         backgroundColor: _background,
+        bottomNavigationBar: const AppBannerAd(),
         body: Stack(
           fit: StackFit.expand,
           children: [

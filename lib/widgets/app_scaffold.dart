@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'app_banner_ad.dart';
 import 'washi_surface.dart';
 
 class AppScaffold extends StatelessWidget {
@@ -10,6 +11,7 @@ class AppScaffold extends StatelessWidget {
     required this.child,
     this.subtitle,
     this.actions,
+    this.showAd = true,
   });
 
   static const gold = Color(0xFFE6C28D);
@@ -20,6 +22,7 @@ class AppScaffold extends StatelessWidget {
   final String? subtitle;
   final Widget child;
   final List<Widget>? actions;
+  final bool showAd;
 
   @override
   Widget build(BuildContext context) {
@@ -61,6 +64,7 @@ class AppScaffold extends StatelessWidget {
           actions: actions,
         ),
         body: SafeArea(child: child),
+        bottomNavigationBar: showAd ? const AppBannerAd() : null,
       ),
     );
   }

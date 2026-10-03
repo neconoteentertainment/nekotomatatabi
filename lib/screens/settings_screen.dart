@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/app_repository.dart';
+import '../services/ad_service.dart';
 import '../widgets/app_scaffold.dart';
 import '../widgets/washi_surface.dart';
 
@@ -55,6 +56,32 @@ class SettingsScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
+            ValueListenableBuilder<bool>(
+              valueListenable: AdService.instance.privacyOptionsRequired,
+              builder: (context, required, _) {
+                if (!required) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: WashiCard(
+                    child: ListTile(
+                      leading: const Icon(Icons.privacy_tip_outlined),
+                      title: const Text('広告のプライバシー設定'),
+                      subtitle: const Text('広告に関する同意内容を確認・変更します。'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () async {
+                        final error =
+                            await AdService.instance.showPrivacyOptions();
+                        if (error != null && context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(error.message)),
+                          );
+                        }
+                      },
+                    ),
+                  ),
+                );
+              },
+            ),
             const WashiCard(
               child: ListTile(
                 leading: Icon(Icons.info_outline),

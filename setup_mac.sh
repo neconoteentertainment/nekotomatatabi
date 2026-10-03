@@ -7,11 +7,21 @@ if ! command -v flutter >/dev/null 2>&1; then
   exit 1
 fi
 
-# 初回だけプラットフォーム用ファイルを生成する。
+# 不足しているプラットフォームだけを生成する。
 # 既存のiOSプロジェクトを再生成するとShare Extension設定が失われるため、
-# ios/androidが揃っている場合はflutter createを実行しない。
-if [ ! -d ios ] || [ ! -d android ]; then
-  flutter create . --platforms=android,ios --org com.neconote --project-name nekotomatatabi
+# Runner.xcodeprojが存在する場合はiOSへflutter createを実行しない。
+if [ ! -f android/app/build.gradle ] && [ ! -f android/app/build.gradle.kts ]; then
+  flutter create . --platforms=android --org com.neconote --project-name nekotomatatabi
+fi
+if [ ! -f ios/Runner.xcodeproj/project.pbxproj ]; then
+  flutter create . --platforms=ios --org com.neconote --project-name nekotomatatabi
+fi
+
+# flutter createでAndroidを生成した場合も、テスト用AdMobアプリIDを確実に残す。
+android_manifest="android/app/src/main/AndroidManifest.xml"
+if [ -f "$android_manifest" ] && \
+   ! grep -q 'com.google.android.gms.ads.APPLICATION_ID' "$android_manifest"; then
+  perl -0pi -e 's!(<application\b[^>]*>)!$1\n        <!-- Google公式テスト用AdMobアプリID。本番公開前に実IDへ差し替えます。 -->\n        <meta-data\n            android:name="com.google.android.gms.ads.APPLICATION_ID"\n            android:value="ca-app-pub-3940256099942544~3347511713" />!' "$android_manifest"
 fi
 
 # iOSのビルド環境を15.5以上へ統一する。
@@ -32,6 +42,7 @@ if [ -f ios/Runner/Info.plist ]; then
   set_plist_string NSPhotoLibraryUsageDescription "写真と電子チケットを選択するために写真ライブラリを使用します。"
   set_plist_string NSPhotoLibraryAddUsageDescription "撮影した画像を写真ライブラリへ保存するために使用します。"
   set_plist_string NSLocationWhenInUseUsageDescription "現在地周辺の観光地を検索するために位置情報を使用します。"
+  set_plist_string GADApplicationIdentifier "ca-app-pub-3940256099942544~1458002511"
 fi
 flutter pub get
 

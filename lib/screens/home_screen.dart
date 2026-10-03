@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../services/app_repository.dart';
+import '../widgets/app_banner_ad.dart';
 import '../widgets/washi_surface.dart';
 import 'history_screen.dart';
 import 'item_screen.dart';
@@ -177,13 +178,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       SizedBox(height: compact ? 6 : 10),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: SizedBox(
-                          height: compact ? 50 : 62,
-                          child: const _AdBanner(),
-                        ),
-                      ),
+                      const AppBannerAd(horizontalPadding: 16),
                       SizedBox(height: compact ? 5 : 8),
                       SizedBox(
                         height: compact ? 42 : 48,
@@ -403,20 +398,6 @@ class _HomeFeatureCard extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-class _AdBanner extends StatelessWidget {
-  const _AdBanner();
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: SizedBox.expand(
-        child: Image.asset('assets/home/ad_banner.jpg', fit: BoxFit.cover),
-      ),
     );
   }
 }
