@@ -136,7 +136,7 @@ class _FavoriteSitesScreenState extends State<FavoriteSitesScreen> {
               child: Padding(
                 padding: EdgeInsets.all(16),
                 child: Text(
-                  'Safariで観光地やお店のURLをコピーし、保存先の都道府県を選んで「URLを追加」から登録できます。',
+                  'Safariの共有ボタンから「ねことまた旅に登録」を選ぶと、保存先の都道府県を指定して直接登録できます。URLをコピーして「URLを追加」から登録することもできます。',
                 ),
               ),
             ),

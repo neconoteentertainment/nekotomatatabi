@@ -8,6 +8,7 @@ import '../models/travel_memory.dart';
 import '../models/travel_plan.dart';
 import '../models/travel_expense.dart';
 import 'audio_service.dart';
+import 'share_inbox_service.dart';
 import 'storage_service.dart';
 
 class AppRepository extends ChangeNotifier {
@@ -15,6 +16,7 @@ class AppRepository extends ChangeNotifier {
 
   final StorageService _storage;
   final AppAudioService _audio;
+  final ShareInboxService _shareInbox = ShareInboxService();
   List<TravelMemory> _memories = [];
   List<String?> _stampPaths = List<String?>.filled(4, null);
   List<TravelPlan> _travelPlans = [];
@@ -79,6 +81,7 @@ class AppRepository extends ChangeNotifier {
     _travelPlans = await _storage.loadTravelPlans();
     _travelExpenses = await _storage.loadTravelExpenses();
     _favoriteSites = await _storage.loadFavoriteSites();
+    await importSharedFavoriteSites();
     _bgmEnabled = await _storage.loadBgmEnabled();
     _bgmTrack = await _storage.loadBgmTrack();
     await _audio.configure(
@@ -234,6 +237,13 @@ class AppRepository extends ChangeNotifier {
       notifyListeners();
     }
     return added;
+  }
+
+  /// Safari の共有画面から登録された項目を、既存のお気に入りへ取り込む。
+  Future<int> importSharedFavoriteSites() async {
+    final pending = await _shareInbox.takePendingFavoriteSites();
+    if (pending.isEmpty) return 0;
+    return importFavoriteSites(pending);
   }
 
   Future<void> setStamp(int index, File source) async {

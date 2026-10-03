@@ -7,8 +7,12 @@ if ! command -v flutter >/dev/null 2>&1; then
   exit 1
 fi
 
-# Android/iOS project files are generated on the Mac. Existing app source and Info.plist are preserved.
-flutter create . --platforms=android,ios --org com.neconote --project-name nekotomatatabi
+# 初回だけプラットフォーム用ファイルを生成する。
+# 既存のiOSプロジェクトを再生成するとShare Extension設定が失われるため、
+# ios/androidが揃っている場合はflutter createを実行しない。
+if [ ! -d ios ] || [ ! -d android ]; then
+  flutter create . --platforms=android,ios --org com.neconote --project-name nekotomatatabi
+fi
 
 # iOSのビルド環境を15.5以上へ統一する。
 if [ -f ios/Podfile ]; then

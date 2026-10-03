@@ -40,6 +40,9 @@ class _NekotoMataTabiAppState extends State<NekotoMataTabiApp>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     widget.repository.setAppActive(state == AppLifecycleState.resumed);
+    if (state == AppLifecycleState.resumed) {
+      widget.repository.importSharedFavoriteSites();
+    }
   }
 
   @override
