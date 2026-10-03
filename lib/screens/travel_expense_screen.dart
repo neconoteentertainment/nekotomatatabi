@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../models/travel_expense.dart';
 import '../models/travel_plan.dart';
 import '../services/app_repository.dart';
+import '../theme/app_theme.dart';
 import '../widgets/app_scaffold.dart';
 import '../widgets/washi_surface.dart';
 
@@ -198,6 +199,7 @@ class _TravelExpenseScreenState extends State<TravelExpenseScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     return AppScaffold(
       title: '旅の支出記録',
       actions: [
@@ -284,8 +286,8 @@ class _TravelExpenseScreenState extends State<TravelExpenseScreen> {
               const SizedBox(height: 16),
               Row(
                 children: [
-                  const Expanded(
-                    child: Text('この月の支出', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                  Expanded(
+                    child: Text('この月の支出', style: TextStyle(color: palette.onBackground, fontSize: 18, fontWeight: FontWeight.bold)),
                   ),
                   FilledButton.icon(
                     onPressed: () => _edit(),
@@ -331,7 +333,7 @@ class _TravelExpenseScreenState extends State<TravelExpenseScreen> {
                 ),
               if (tripGroups.isNotEmpty) ...[
                 const SizedBox(height: 16),
-                const Text('旅ごとの合計', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                Text('旅ごとの合計', style: TextStyle(color: palette.onBackground, fontSize: 18, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 6),
                 for (final entry in tripGroups.entries)
                   Padding(

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_theme.dart';
+
 class WashiSurface extends StatelessWidget {
   const WashiSurface({
     super.key,
@@ -27,6 +29,7 @@ class WashiSurface extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final base = Theme.of(context);
+    final palette = AppPalette.of(context);
     final themed = base.copyWith(
       colorScheme: base.colorScheme.copyWith(
         surface: const Color(0xFFFFF8EC),
@@ -41,7 +44,7 @@ class WashiSurface extends StatelessWidget {
         titleTextStyle: base.textTheme.titleMedium?.copyWith(color: ink),
         subtitleTextStyle: base.textTheme.bodyMedium?.copyWith(color: mutedInk),
       ),
-      dividerColor: border.withValues(alpha: .28),
+      dividerColor: palette.accent.withValues(alpha: .28),
     );
     return Container(
       width: width,
@@ -55,7 +58,7 @@ class WashiSurface extends StatelessWidget {
           opacity: .9,
         ),
         borderRadius: BorderRadius.circular(borderRadius),
-        border: Border.all(color: border.withValues(alpha: .72)),
+        border: Border.all(color: palette.accent.withValues(alpha: .72)),
         boxShadow: const [
           BoxShadow(color: Colors.black26, blurRadius: 8, offset: Offset(0, 3)),
         ],

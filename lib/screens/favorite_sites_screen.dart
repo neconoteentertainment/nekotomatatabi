@@ -12,6 +12,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/favorite_site.dart';
 import '../models/local_item.dart';
 import '../services/app_repository.dart';
+import '../theme/app_theme.dart';
 import '../widgets/app_scaffold.dart';
 import '../widgets/washi_surface.dart';
 
@@ -98,6 +99,7 @@ class _FavoriteSitesScreenState extends State<FavoriteSitesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     return AppScaffold(
       title: 'お気に入りのサイト',
       subtitle: 'FAVORITE PLACES',
@@ -146,8 +148,8 @@ class _FavoriteSitesScreenState extends State<FavoriteSitesScreen> {
                 padding: const EdgeInsets.fromLTRB(4, 12, 4, 6),
                 child: Text(
                   region,
-                  style: const TextStyle(
-                    color: AppScaffold.gold,
+                  style: TextStyle(
+                    color: palette.accent,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),

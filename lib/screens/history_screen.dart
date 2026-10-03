@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../models/travel_memory.dart';
 import '../services/app_repository.dart';
+import '../theme/app_theme.dart';
 import '../widgets/app_banner_ad.dart';
 import '../widgets/washi_surface.dart';
 
@@ -19,10 +20,6 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProviderStateMixin {
-  static const _gold = Color(0xFFE6C28D);
-  static const _background = Color(0xFF171412);
-  static const _panel = Color(0xE625211E);
-
   late final TabController _tabs = TabController(length: 3, vsync: this);
 
   @override
@@ -33,21 +30,24 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light,
+      value: palette.brightness == Brightness.dark
+          ? SystemUiOverlayStyle.light
+          : SystemUiOverlayStyle.dark,
       child: Scaffold(
-        backgroundColor: _background,
+        backgroundColor: palette.background,
         bottomNavigationBar: const AppBannerAd(),
         body: Stack(
           fit: StackFit.expand,
           children: [
-            const Positioned.fill(
+            Positioned.fill(
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [Color(0xFF201B18), Color(0xFF171412)],
+                    colors: [palette.backgroundAlt, palette.background],
                   ),
                 ),
               ),
@@ -61,20 +61,20 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
                       children: [
                         IconButton(
                           onPressed: () => Navigator.of(context).pop(),
-                          icon: const Icon(Icons.chevron_left, color: Colors.white, size: 32),
+                          icon: Icon(Icons.chevron_left, color: palette.onBackground, size: 32),
                         ),
-                        const Expanded(
+                        Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Text(
                                 '旅の思い出を振り返る',
-                                style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w700),
+                                style: TextStyle(color: palette.onBackground, fontSize: 22, fontWeight: FontWeight.w700),
                               ),
                               SizedBox(height: 2),
                               Text(
                                 'MEMORIES OF JOURNEYS',
-                                style: TextStyle(color: _gold, fontSize: 9, letterSpacing: 2.1),
+                                style: TextStyle(color: palette.accent, fontSize: 9, letterSpacing: 2.1),
                               ),
                             ],
                           ),
@@ -92,9 +92,9 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
                         controller: _tabs,
                         indicatorSize: TabBarIndicatorSize.tab,
                         indicator: BoxDecoration(
-                          color: _gold.withOpacity(.42),
+                          color: palette.accent.withValues(alpha: .42),
                           borderRadius: BorderRadius.circular(18),
-                          border: Border.all(color: _gold.withOpacity(.7)),
+                          border: Border.all(color: palette.accent.withValues(alpha: .7)),
                         ),
                         dividerColor: Colors.transparent,
                         labelColor: WashiSurface.ink,
@@ -213,12 +213,13 @@ class _MemoryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final photos = memory.photoPaths.where((p) => File(p).existsSync()).toList();
+    final palette = AppPalette.of(context);
     return WashiSurface(
       margin: const EdgeInsets.only(bottom: 12),
       borderRadius: 20,
       clipBehavior: Clip.antiAlias,
       child: ExpansionTile(
-          iconColor: const Color(0xFFE6C28D),
+          iconColor: palette.accent,
           collapsedIconColor: WashiSurface.mutedInk,
           tilePadding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
           childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 14),
@@ -233,9 +234,9 @@ class _MemoryCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: const Color(0xFF3B3029),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0xFFE6C28D).withOpacity(.45)),
+                    border: Border.all(color: palette.accent.withValues(alpha: .45)),
                   ),
-                  child: const Icon(Icons.place_outlined, color: Color(0xFFE6C28D)),
+                  child: Icon(Icons.place_outlined, color: palette.accent),
                 ),
           title: Text(memory.placeName, style: const TextStyle(color: WashiSurface.ink, fontWeight: FontWeight.w700)),
           subtitle: Text(
@@ -245,7 +246,7 @@ class _MemoryCard extends StatelessWidget {
           trailing: IconButton(
             tooltip: 'この場所を削除',
             onPressed: () => _deleteMemory(context),
-            icon: const Icon(Icons.delete_outline, color: Color(0xFFE6C28D)),
+            icon: Icon(Icons.delete_outline, color: palette.accent),
           ),
           children: [
             if (memory.memo.isNotEmpty) ...[
@@ -262,8 +263,8 @@ class _MemoryCard extends StatelessWidget {
                 icon: const Icon(Icons.add_photo_alternate_outlined),
                 label: const Text('スマホの写真から追加'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFFE6C28D),
-                  side: const BorderSide(color: Color(0x99E6C28D)),
+                  foregroundColor: palette.accent,
+                  side: BorderSide(color: palette.accent.withValues(alpha: .6)),
                 ),
               ),
             ),
@@ -344,6 +345,7 @@ class _PrefectureMap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     final counts = <String, int>{};
     for (final m in memories) {
       counts[m.prefecture] = (counts[m.prefecture] ?? 0) + 1;
@@ -377,7 +379,7 @@ class _PrefectureMap extends StatelessWidget {
                         context: context,
                         isScrollControlled: true,
                         useSafeArea: true,
-                        backgroundColor: const Color(0xFF171412),
+                        backgroundColor: palette.background,
                         builder: (context) => FractionallySizedBox(
                           heightFactor: .9,
                           child: Column(
@@ -389,12 +391,12 @@ class _PrefectureMap extends StatelessWidget {
                                     Expanded(
                                       child: Text(
                                         '$prefectureの思い出',
-                                        style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w700),
+                                        style: TextStyle(color: palette.onBackground, fontSize: 20, fontWeight: FontWeight.w700),
                                       ),
                                     ),
                                     IconButton(
                                       onPressed: () => Navigator.pop(context),
-                                      icon: const Icon(Icons.close, color: Colors.white),
+                                      icon: Icon(Icons.close, color: palette.onBackground),
                                     ),
                                   ],
                                 ),
@@ -422,7 +424,7 @@ class _PrefectureMap extends StatelessWidget {
                   ),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: visited ? const Color(0xFFE6C28D) : WashiSurface.border.withValues(alpha: .42),
+                    color: visited ? palette.accent : WashiSurface.border.withValues(alpha: .42),
                   ),
                 ),
                 alignment: Alignment.center,
@@ -530,23 +532,24 @@ class _DarkDropdown<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     return DropdownButtonFormField<T>(
       value: value,
-      dropdownColor: const Color(0xFF2A231F),
-      style: const TextStyle(color: Colors.white),
-      iconEnabledColor: const Color(0xFFE6C28D),
+      dropdownColor: palette.panel,
+      style: TextStyle(color: palette.onPanel),
+      iconEnabledColor: palette.accent,
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: Colors.white70),
+        labelStyle: TextStyle(color: palette.onPanel.withValues(alpha: .72)),
         filled: true,
-        fillColor: const Color(0xCC28211D),
+        fillColor: palette.panel.withValues(alpha: .9),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0x88E6C28D)),
+          borderSide: BorderSide(color: palette.accent.withValues(alpha: .53)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFFE6C28D)),
+          borderSide: BorderSide(color: palette.accent),
         ),
       ),
       items: items,
@@ -563,6 +566,7 @@ class _TravelHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     return WashiSurface(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
@@ -575,9 +579,9 @@ class _TravelHeader extends StatelessWidget {
             decoration: BoxDecoration(
               color: const Color(0xFF40342B),
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFFE6C28D)),
+              border: Border.all(color: palette.accent),
             ),
-            child: Icon(icon, color: const Color(0xFFE6C28D)),
+            child: Icon(icon, color: palette.accent),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -602,6 +606,7 @@ class _EmptyMemory extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     return Center(
       child: WashiSurface(
         margin: const EdgeInsets.all(24),
@@ -610,7 +615,7 @@ class _EmptyMemory extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.luggage_outlined, color: Color(0xFFE6C28D), size: 40),
+            Icon(Icons.luggage_outlined, color: palette.accent, size: 40),
             const SizedBox(height: 10),
             Text(message, textAlign: TextAlign.center, style: const TextStyle(color: WashiSurface.mutedInk)),
           ],

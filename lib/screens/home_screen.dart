@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../services/app_repository.dart';
+import '../theme/app_theme.dart';
 import '../widgets/app_banner_ad.dart';
 import '../widgets/washi_surface.dart';
 import 'history_screen.dart';
@@ -22,10 +23,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  static const _gold = Color(0xFFE6C28D);
-  static const _panel = Color(0xE6221C18);
-  static const _background = Color(0xFF171412);
-
   final PageController _pages = PageController();
   int _page = 0;
 
@@ -52,10 +49,13 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final repository = widget.repository;
+    final palette = AppPalette.of(context);
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light,
+      value: palette.brightness == Brightness.dark
+          ? SystemUiOverlayStyle.light
+          : SystemUiOverlayStyle.dark,
       child: Scaffold(
-        backgroundColor: _background,
+        backgroundColor: palette.background,
         body: SafeArea(
           child: AnimatedBuilder(
             animation: repository,
@@ -223,6 +223,7 @@ class _VisitBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     return SizedBox(
       height: compact ? 48 : 56,
       child: WashiSurface(
@@ -230,7 +231,7 @@ class _VisitBar extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 18),
         child: Row(
         children: [
-          Icon(Icons.pets, color: _HomeScreenState._gold, size: compact ? 23 : 27),
+          Icon(Icons.pets, color: palette.accent, size: compact ? 23 : 27),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -295,6 +296,7 @@ class _HomeFeatureCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxHeight < 235;
@@ -313,7 +315,7 @@ class _HomeFeatureCard extends StatelessWidget {
                 ),
                 color: const Color(0xFFFFF8EC),
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: _HomeScreenState._gold.withOpacity(.62)),
+                border: Border.all(color: palette.accent.withValues(alpha: .62)),
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(18),
@@ -345,9 +347,9 @@ class _HomeFeatureCard extends StatelessWidget {
                                 decoration: BoxDecoration(
                                   color: const Color(0xF038302A),
                                   shape: BoxShape.circle,
-                                  border: Border.all(color: _HomeScreenState._gold),
+                                  border: Border.all(color: palette.accent),
                                 ),
-                                child: Icon(data.icon, color: _HomeScreenState._gold, size: compact ? 22 : 26),
+                                child: Icon(data.icon, color: palette.accent, size: compact ? 22 : 26),
                               ),
                             ),
                           ),
@@ -387,9 +389,9 @@ class _HomeFeatureCard extends StatelessWidget {
                       margin: EdgeInsets.only(bottom: compact ? 7 : 10),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(color: _HomeScreenState._gold.withOpacity(.8)),
+                        border: Border.all(color: palette.accent.withValues(alpha: .8)),
                       ),
-                      child: const Icon(Icons.chevron_right, color: _HomeScreenState._gold),
+                      child: Icon(Icons.chevron_right, color: palette.accent),
                     ),
                   ],
                 ),
@@ -410,14 +412,21 @@ class _PageIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     Widget button(IconData icon, VoidCallback? onPressed) {
       return IconButton(
         visualDensity: VisualDensity.compact,
         onPressed: onPressed,
         icon: Icon(icon),
-        color: onPressed == null ? Colors.white24 : _HomeScreenState._gold,
+        color: onPressed == null
+            ? palette.onBackground.withValues(alpha: .24)
+            : palette.accent,
         style: IconButton.styleFrom(
-          side: BorderSide(color: onPressed == null ? Colors.white12 : _HomeScreenState._gold.withOpacity(.8)),
+          side: BorderSide(
+            color: onPressed == null
+                ? palette.onBackground.withValues(alpha: .12)
+                : palette.accent.withValues(alpha: .8),
+          ),
         ),
       );
     }
@@ -425,15 +434,15 @@ class _PageIndicator extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Container(width: 42, height: 1, color: Colors.white24),
+        Container(width: 42, height: 1, color: palette.onBackground.withValues(alpha: .24)),
         const SizedBox(width: 10),
         button(Icons.chevron_left, onPrevious),
         const SizedBox(width: 10),
-        Text('${page + 1} / 3', style: const TextStyle(color: Colors.white, fontSize: 16)),
+        Text('${page + 1} / 3', style: TextStyle(color: palette.onBackground, fontSize: 16)),
         const SizedBox(width: 10),
         button(Icons.chevron_right, onNext),
         const SizedBox(width: 10),
-        Container(width: 42, height: 1, color: Colors.white24),
+        Container(width: 42, height: 1, color: palette.onBackground.withValues(alpha: .24)),
       ],
     );
   }
@@ -442,15 +451,17 @@ class _PageIndicator extends StatelessWidget {
 class _HelpDialog extends StatelessWidget {
   const _HelpDialog();
   @override
-  Widget build(BuildContext context) => AlertDialog(
-        backgroundColor: const Color(0xFF241F1C),
+  Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
+    return AlertDialog(
+        backgroundColor: palette.panel,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: _HomeScreenState._gold.withOpacity(.55)),
+          side: BorderSide(color: palette.accent.withValues(alpha: .55)),
         ),
-        title: const Text('アプリの使用方法', style: TextStyle(color: Colors.white)),
-        content: const SingleChildScrollView(
+        title: Text('アプリの使用方法', style: TextStyle(color: palette.onPanel)),
+        content: SingleChildScrollView(
           child: Text(
             '1. 「旅の思い出を記録する」で現在地を取得します。\n\n'
             '2. 周辺候補から訪問した場所を登録します。\n\n'
@@ -459,14 +470,15 @@ class _HelpDialog extends StatelessWidget {
             '5. スタンプは「スタンプ登録」で4個まで登録できます。\n\n'
             '6. 「旅の予定を立てる」で1日のスケジュールを作成し、QRコードで共有できます。\n\n'
             '7. 「旅の思い出を振り返る」で一覧・都道府県・年月から確認できます。',
-            style: TextStyle(color: Colors.white70, height: 1.55),
+            style: TextStyle(color: palette.onPanel.withValues(alpha: .78), height: 1.55),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('閉じる', style: TextStyle(color: _HomeScreenState._gold)),
+            child: Text('閉じる', style: TextStyle(color: palette.accent)),
           ),
         ],
       );
+  }
 }

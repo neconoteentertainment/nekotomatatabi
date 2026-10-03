@@ -3,6 +3,7 @@ import 'package:geolocator/geolocator.dart';
 
 import '../models/travel_memory.dart';
 import '../services/app_repository.dart';
+import '../theme/app_theme.dart';
 import '../services/location_service.dart';
 import '../widgets/app_scaffold.dart';
 import '../widgets/washi_surface.dart';
@@ -158,6 +159,7 @@ class _RecordScreenState extends State<RecordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     return AppScaffold(
       title: '旅の思い出を記録する',
       subtitle: 'MEMORIES OF JOURNEYS',
@@ -244,10 +246,10 @@ class _RecordScreenState extends State<RecordScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppScaffold.gold.withValues(alpha: .22),
+                      color: palette.accent.withValues(alpha: .22),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: AppScaffold.gold.withValues(alpha: .55),
+                        color: palette.accent.withValues(alpha: .55),
                       ),
                     ),
                     child: Row(

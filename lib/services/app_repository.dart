@@ -7,6 +7,7 @@ import '../models/favorite_site.dart';
 import '../models/travel_memory.dart';
 import '../models/travel_plan.dart';
 import '../models/travel_expense.dart';
+import '../theme/app_theme.dart';
 import 'audio_service.dart';
 import 'share_inbox_service.dart';
 import 'storage_service.dart';
@@ -25,6 +26,7 @@ class AppRepository extends ChangeNotifier {
   bool _ready = false;
   bool _bgmEnabled = true;
   String _bgmTrack = 'umibe';
+  AppColorTheme _colorTheme = AppColorTheme.classic;
 
   static const _testBasePoints = 30;
 
@@ -36,6 +38,7 @@ class AppRepository extends ChangeNotifier {
   bool get ready => _ready;
   bool get bgmEnabled => _bgmEnabled;
   String get bgmTrack => _bgmTrack;
+  AppColorTheme get colorTheme => _colorTheme;
 
   int get uniqueVisitCount => _uniqueMemories(_memories).length;
 
@@ -84,6 +87,7 @@ class AppRepository extends ChangeNotifier {
     await importSharedFavoriteSites();
     _bgmEnabled = await _storage.loadBgmEnabled();
     _bgmTrack = await _storage.loadBgmTrack();
+    _colorTheme = appColorThemeFromStorage(await _storage.loadColorTheme());
     await _audio.configure(
       enabled: _bgmEnabled,
       asset: _bgmAsset(_bgmTrack),
@@ -110,6 +114,13 @@ class AppRepository extends ChangeNotifier {
     await _storage.saveBgmTrack(track);
     await _audio.setTrack(_bgmAsset(track));
     notifyListeners();
+  }
+
+  Future<void> setColorTheme(AppColorTheme theme) async {
+    if (_colorTheme == theme) return;
+    _colorTheme = theme;
+    notifyListeners();
+    await _storage.saveColorTheme(theme.storageKey);
   }
 
   Future<void> setAppActive(bool active) => _audio.setAppActive(active);

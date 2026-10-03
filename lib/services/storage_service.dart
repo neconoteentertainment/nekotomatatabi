@@ -19,6 +19,7 @@ class StorageService {
   static const _favoriteSitesKey = 'favorite_sites_v1';
   static const _bgmEnabledKey = 'bgm_enabled_v1';
   static const _bgmTrackKey = 'bgm_track_v1';
+  static const _colorThemeKey = 'color_theme_v1';
 
   String _portablePath(String path, String folderName) {
     final normalized = p.normalize(path);
@@ -177,6 +178,16 @@ class StorageService {
   Future<void> saveBgmTrack(String track) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_bgmTrackKey, track);
+  }
+
+  Future<String?> loadColorTheme() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_colorThemeKey);
+  }
+
+  Future<void> saveColorTheme(String theme) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_colorThemeKey, theme);
   }
 
   Future<List<String?>> loadStampPaths() async {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../services/app_repository.dart';
 import '../services/ad_service.dart';
+import '../theme/app_theme.dart';
 import '../widgets/app_scaffold.dart';
 import '../widgets/washi_surface.dart';
 
@@ -19,6 +20,30 @@ class SettingsScreen extends StatelessWidget {
         builder: (context, _) => ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            WashiCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const ListTile(
+                    leading: Icon(Icons.palette_outlined),
+                    title: Text('色の選択'),
+                    subtitle: Text('アプリ全体の配色を切り替えます。'),
+                  ),
+                  const Divider(height: 1),
+                  for (final theme in AppColorTheme.values)
+                    RadioListTile<AppColorTheme>(
+                      value: theme,
+                      groupValue: repository.colorTheme,
+                      onChanged: (value) {
+                        if (value != null) repository.setColorTheme(value);
+                      },
+                      title: Text(theme.label),
+                      secondary: _ThemePreview(theme: theme),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
             WashiCard(
               child: Column(
                 children: [
@@ -94,4 +119,46 @@ class SettingsScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+class _ThemePreview extends StatelessWidget {
+  const _ThemePreview({required this.theme});
+
+  final AppColorTheme theme;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = AppPalette.forTheme(theme);
+    return Container(
+      width: 42,
+      height: 28,
+      decoration: BoxDecoration(
+        color: palette.background,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: WashiSurface.border),
+      ),
+      alignment: Alignment.center,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _ColorDot(color: palette.panel),
+          const SizedBox(width: 3),
+          _ColorDot(color: palette.accent),
+        ],
+      ),
+    );
+  }
+}
+
+class _ColorDot extends StatelessWidget {
+  const _ColorDot({required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        width: 9,
+        height: 9,
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      );
 }

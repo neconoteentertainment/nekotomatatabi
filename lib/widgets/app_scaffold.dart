@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../theme/app_theme.dart';
 import 'app_banner_ad.dart';
 import 'washi_surface.dart';
 
@@ -14,10 +15,6 @@ class AppScaffold extends StatelessWidget {
     this.showAd = true,
   });
 
-  static const gold = Color(0xFFE6C28D);
-  static const background = Color(0xFF171412);
-  static const panel = Color(0xFF26211E);
-
   final String title;
   final String? subtitle;
   final Widget child;
@@ -26,13 +23,16 @@ class AppScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light,
+      value: palette.brightness == Brightness.dark
+          ? SystemUiOverlayStyle.light
+          : SystemUiOverlayStyle.dark,
       child: Scaffold(
-        backgroundColor: background,
+        backgroundColor: palette.background,
         appBar: AppBar(
-          backgroundColor: background,
-          foregroundColor: Colors.white,
+          backgroundColor: palette.background,
+          foregroundColor: palette.onBackground,
           surfaceTintColor: Colors.transparent,
           elevation: 0,
           centerTitle: true,
@@ -41,8 +41,8 @@ class AppScaffold extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: palette.onBackground,
                   fontWeight: FontWeight.w700,
                   letterSpacing: .2,
                 ),
@@ -51,8 +51,8 @@ class AppScaffold extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   subtitle!,
-                  style: const TextStyle(
-                    color: gold,
+                  style: TextStyle(
+                    color: palette.accent,
                     fontSize: 9,
                     fontWeight: FontWeight.w500,
                     letterSpacing: 2.1,
@@ -80,17 +80,18 @@ class MenuCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     return WashiCard(
       clipBehavior: Clip.antiAlias,
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
         leading: CircleAvatar(
-          backgroundColor: AppScaffold.gold.withValues(alpha: .12),
-          child: Icon(icon, color: AppScaffold.gold),
+          backgroundColor: palette.accent.withValues(alpha: .12),
+          child: Icon(icon, color: palette.accent),
         ),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, color: WashiSurface.ink)),
         subtitle: subtitle == null ? null : Text(subtitle!, style: const TextStyle(color: WashiSurface.mutedInk)),
-        trailing: const Icon(Icons.chevron_right, color: AppScaffold.gold),
+        trailing: Icon(Icons.chevron_right, color: palette.accent),
         onTap: onTap,
       ),
     );

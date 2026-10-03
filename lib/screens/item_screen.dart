@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/local_item.dart';
 import '../services/app_repository.dart';
+import '../theme/app_theme.dart';
 import '../widgets/app_scaffold.dart';
 import '../widgets/washi_surface.dart';
 
@@ -12,6 +13,7 @@ class ItemScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     return AppScaffold(
       title: '名産品集め',
       child: AnimatedBuilder(
@@ -24,17 +26,17 @@ class ItemScreen extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 6),
-            const Text(
+            Text(
               '訪れた観光地は県ごとに1か所=1P。\n同じ観光地を複数回訪れても重複して加算しません。',
-              style: TextStyle(color: Colors.white70),
+              style: TextStyle(color: palette.onBackground.withValues(alpha: .72)),
             ),
             const SizedBox(height: 12),
             for (final region in localItemRegions) ...[
               WashiCard(
                 child: ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: AppScaffold.gold.withValues(alpha: .12),
-                    child: const Icon(Icons.landscape_outlined, color: AppScaffold.gold),
+                    backgroundColor: palette.accent.withValues(alpha: .12),
+                    child: Icon(Icons.landscape_outlined, color: palette.accent),
                   ),
                   title: Text(region),
                   subtitle: Text(prefecturesForRegion(region).join('・')),
@@ -84,6 +86,7 @@ class _PrefectureScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final prefectures = prefecturesForRegion(region);
+    final palette = AppPalette.of(context);
     return AppScaffold(
       title: region,
       child: AnimatedBuilder(
@@ -98,8 +101,8 @@ class _PrefectureScreen extends StatelessWidget {
             return WashiCard(
               child: ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: AppScaffold.gold.withValues(alpha: .12),
-                  child: const Icon(Icons.pets, color: AppScaffold.gold),
+                  backgroundColor: palette.accent.withValues(alpha: .12),
+                  child: Icon(Icons.pets, color: palette.accent),
                 ),
                 title: Text(prefecture, style: const TextStyle(fontWeight: FontWeight.bold)),
                 subtitle: Text('$points P'),
@@ -130,6 +133,7 @@ class _LocalItemListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = localItems.where((e) => e.prefecture == prefecture).toList();
+    final palette = AppPalette.of(context);
     return AppScaffold(
       title: prefecture,
       child: AnimatedBuilder(
@@ -144,16 +148,16 @@ class _LocalItemListScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
-                      const Icon(Icons.pets, color: AppScaffold.gold),
+                      Icon(Icons.pets, color: palette.accent),
                       const SizedBox(width: 10),
                       Text('$prefecture の旅ポイント'),
                       const Spacer(),
                       Text(
                         '$points P',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
-                          color: AppScaffold.gold,
+                          color: palette.accent,
                         ),
                       ),
                     ],
@@ -211,7 +215,7 @@ class _LocalItemListScreen extends StatelessWidget {
                                     ),
                                     Text(
                                       '${item.threshold}P',
-                                      style: const TextStyle(color: AppScaffold.gold, fontWeight: FontWeight.bold),
+                                      style: TextStyle(color: palette.accent, fontWeight: FontWeight.bold),
                                     ),
                                   ],
                                 ),

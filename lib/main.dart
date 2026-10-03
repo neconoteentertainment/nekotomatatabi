@@ -5,7 +5,7 @@ import 'screens/home_screen.dart';
 import 'services/ad_service.dart';
 import 'services/app_repository.dart';
 import 'services/storage_service.dart';
-import 'widgets/app_scaffold.dart';
+import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -51,59 +51,14 @@ class _NekotoMataTabiAppState extends State<NekotoMataTabiApp>
 
   @override
   Widget build(BuildContext context) {
-    final scheme = ColorScheme.fromSeed(
-      seedColor: AppScaffold.gold,
-      brightness: Brightness.dark,
-    );
-    return MaterialApp(
-      title: 'ねことまた旅',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: scheme,
-        scaffoldBackgroundColor: AppScaffold.background,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: AppScaffold.background,
-          foregroundColor: Colors.white,
-          surfaceTintColor: Colors.transparent,
-        ),
-        cardTheme: CardThemeData(
-          color: AppScaffold.panel,
-          surfaceTintColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
-            side: BorderSide(color: AppScaffold.gold.withValues(alpha: .38)),
-          ),
-        ),
-        dialogTheme: DialogThemeData(
-          backgroundColor: AppScaffold.panel,
-          surfaceTintColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(color: AppScaffold.gold.withValues(alpha: .45)),
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide(color: AppScaffold.gold.withValues(alpha: .45)),
-          ),
-          focusedBorder: const OutlineInputBorder(
-            borderSide: BorderSide(color: AppScaffold.gold, width: 1.5),
-          ),
-        ),
-        filledButtonTheme: FilledButtonThemeData(
-          style: FilledButton.styleFrom(
-            backgroundColor: AppScaffold.gold,
-            foregroundColor: const Color(0xFF241C17),
-          ),
-        ),
-        textButtonTheme: TextButtonThemeData(
-          style: TextButton.styleFrom(foregroundColor: AppScaffold.gold),
-        ),
-        useMaterial3: true,
+    return AnimatedBuilder(
+      animation: widget.repository,
+      builder: (context, _) => MaterialApp(
+        title: 'ねことまた旅',
+        debugShowCheckedModeBanner: false,
+        theme: buildAppTheme(widget.repository.colorTheme),
+        home: HomeScreen(repository: widget.repository),
       ),
-      home: HomeScreen(repository: widget.repository),
     );
   }
 }
