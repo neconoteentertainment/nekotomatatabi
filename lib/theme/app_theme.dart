@@ -1,24 +1,30 @@
 import 'package:flutter/material.dart';
 
-enum AppColorTheme { classic, forest, sakura }
+enum AppColorTheme { classic, sakura, forest, autumn, winter }
 
 extension AppColorThemeInfo on AppColorTheme {
   String get storageKey => switch (this) {
         AppColorTheme.classic => 'classic',
-        AppColorTheme.forest => 'forest',
         AppColorTheme.sakura => 'sakura',
+        AppColorTheme.forest => 'forest',
+        AppColorTheme.autumn => 'autumn',
+        AppColorTheme.winter => 'winter',
       };
 
   String get label => switch (this) {
-        AppColorTheme.classic => '現在の配色（黒×金）',
-        AppColorTheme.forest => '深緑',
-        AppColorTheme.sakura => 'くすみ桜',
+        AppColorTheme.classic => 'ベーシック(黒)',
+        AppColorTheme.sakura => '春(くすみ桜)',
+        AppColorTheme.forest => '夏(深緑)',
+        AppColorTheme.autumn => '秋(紅葉色)',
+        AppColorTheme.winter => '冬(象牙色)',
       };
 }
 
 AppColorTheme appColorThemeFromStorage(String? value) => switch (value) {
       'forest' => AppColorTheme.forest,
       'sakura' => AppColorTheme.sakura,
+      'autumn' => AppColorTheme.autumn,
+      'winter' => AppColorTheme.winter,
       _ => AppColorTheme.classic,
     };
 
@@ -77,10 +83,34 @@ class AppPalette extends ThemeExtension<AppPalette> {
     brightness: Brightness.light,
   );
 
+  static const autumn = AppPalette(
+    background: Color(0xFF58252B),
+    backgroundAlt: Color(0xFF6B3035),
+    panel: Color(0xFF743A3D),
+    accent: Color(0xFFE1B06A),
+    onBackground: Color(0xFFFFF4E8),
+    onPanel: Color(0xFFFFF4E8),
+    onAccent: Color(0xFF352017),
+    brightness: Brightness.dark,
+  );
+
+  static const winter = AppPalette(
+    background: Color(0xFFE8E0D2),
+    backgroundAlt: Color(0xFFD9D0C1),
+    panel: Color(0xFFF7F1E7),
+    accent: Color(0xFF607486),
+    onBackground: Color(0xFF302C29),
+    onPanel: Color(0xFF302C29),
+    onAccent: Color(0xFFFFFBF4),
+    brightness: Brightness.light,
+  );
+
   static AppPalette forTheme(AppColorTheme theme) => switch (theme) {
         AppColorTheme.classic => classic,
-        AppColorTheme.forest => forest,
         AppColorTheme.sakura => sakura,
+        AppColorTheme.forest => forest,
+        AppColorTheme.autumn => autumn,
+        AppColorTheme.winter => winter,
       };
 
   static AppPalette of(BuildContext context) =>
