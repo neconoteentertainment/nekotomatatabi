@@ -18,6 +18,14 @@ extension AppColorThemeInfo on AppColorTheme {
         AppColorTheme.autumn => '秋(紅葉色)',
         AppColorTheme.winter => '冬(象牙色)',
       };
+
+  String get heroAssetPath => switch (this) {
+        AppColorTheme.classic => 'assets/home/hero.jpg',
+        AppColorTheme.sakura => 'assets/home/hero_spring.jpg',
+        AppColorTheme.forest => 'assets/home/hero_summer.jpg',
+        AppColorTheme.autumn => 'assets/home/hero_autumn.jpg',
+        AppColorTheme.winter => 'assets/home/hero_winter.jpg',
+      };
 }
 
 AppColorTheme appColorThemeFromStorage(String? value) => switch (value) {

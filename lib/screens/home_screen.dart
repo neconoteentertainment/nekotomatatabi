@@ -71,7 +71,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   final menuFlex = compact ? 29 : 32;
                   return Column(
                     children: [
-                      Expanded(flex: heroFlex, child: const _HeroImage()),
+                      Expanded(
+                        flex: heroFlex,
+                        child: _HeroImage(
+                          assetPath: repository.colorTheme.heroAssetPath,
+                        ),
+                      ),
                       Padding(
                         padding: EdgeInsets.fromLTRB(16, compact ? 6 : 10, 16, 0),
                         child: _VisitBar(
@@ -202,15 +207,18 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class _HeroImage extends StatelessWidget {
-  const _HeroImage();
+  const _HeroImage({required this.assetPath});
+
+  final String assetPath;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox.expand(
       child: Image.asset(
-        'assets/home/hero.jpg',
+        assetPath,
         fit: BoxFit.cover,
         alignment: Alignment.topCenter,
+        gaplessPlayback: true,
       ),
     );
   }

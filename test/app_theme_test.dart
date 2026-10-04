@@ -23,6 +23,14 @@ void main() {
     );
   });
 
+  test('配色ごとにホーム画面の画像が割り当てられる', () {
+    expect(AppColorTheme.classic.heroAssetPath, 'assets/home/hero.jpg');
+    expect(AppColorTheme.sakura.heroAssetPath, 'assets/home/hero_spring.jpg');
+    expect(AppColorTheme.forest.heroAssetPath, 'assets/home/hero_summer.jpg');
+    expect(AppColorTheme.autumn.heroAssetPath, 'assets/home/hero_autumn.jpg');
+    expect(AppColorTheme.winter.heroAssetPath, 'assets/home/hero_winter.jpg');
+  });
+
   test('保存値から配色を復元し、不明値は従来色へ戻す', () {
     expect(appColorThemeFromStorage('classic'), AppColorTheme.classic);
     expect(appColorThemeFromStorage('forest'), AppColorTheme.forest);
