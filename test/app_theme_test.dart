@@ -40,4 +40,12 @@ void main() {
     expect(appColorThemeFromStorage('unknown'), AppColorTheme.classic);
     expect(appColorThemeFromStorage(null), AppColorTheme.classic);
   });
+
+  test('明るい季節テーマのホームバッジは明るい前景色を使う', () {
+    expect(AppPalette.sakura.homeBadgeForeground, AppPalette.sakura.onAccent);
+    expect(AppPalette.winter.homeBadgeForeground, AppPalette.winter.onAccent);
+    expect(AppPalette.classic.homeBadgeForeground, AppPalette.classic.accent);
+    expect(AppPalette.forest.homeBadgeForeground, AppPalette.forest.accent);
+    expect(AppPalette.autumn.homeBadgeForeground, AppPalette.autumn.accent);
+  });
 }

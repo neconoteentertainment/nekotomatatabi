@@ -124,6 +124,10 @@ class AppPalette extends ThemeExtension<AppPalette> {
   static AppPalette of(BuildContext context) =>
       Theme.of(context).extension<AppPalette>() ?? classic;
 
+  /// ホームカードの濃色バッジ上で十分なコントラストを確保する色。
+  Color get homeBadgeForeground =>
+      brightness == Brightness.light ? onAccent : accent;
+
   @override
   AppPalette copyWith({
     Color? background,

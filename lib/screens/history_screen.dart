@@ -353,12 +353,6 @@ class _PrefectureMap extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(14, 4, 14, 24),
       children: [
-        _TravelHeader(
-          icon: Icons.map_outlined,
-          title: '日本を旅した足あと',
-          subtitle: '訪れた都道府県が金色に灯ります。タップすると、その土地の写真と思い出を開けます。',
-        ),
-        const SizedBox(height: 12),
         GridView.count(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -479,12 +473,6 @@ class _MonthMemoriesState extends State<_MonthMemories> {
           padding: const EdgeInsets.fromLTRB(14, 4, 14, 8),
           child: Column(
             children: [
-              const _TravelHeader(
-                icon: Icons.calendar_month_outlined,
-                title: '季節をめくるように',
-                subtitle: '年月を選んで、その頃の旅をまとめて振り返れます。',
-              ),
-              const SizedBox(height: 10),
               Row(
                 children: [
                   Expanded(
@@ -554,48 +542,6 @@ class _DarkDropdown<T> extends StatelessWidget {
       ),
       items: items,
       onChanged: onChanged,
-    );
-  }
-}
-
-class _TravelHeader extends StatelessWidget {
-  const _TravelHeader({required this.icon, required this.title, required this.subtitle});
-  final IconData icon;
-  final String title;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = AppPalette.of(context);
-    return WashiSurface(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      borderRadius: 18,
-      child: Row(
-        children: [
-          Container(
-            width: 46,
-            height: 46,
-            decoration: BoxDecoration(
-              color: const Color(0xFF40342B),
-              shape: BoxShape.circle,
-              border: Border.all(color: palette.accent),
-            ),
-            child: Icon(icon, color: palette.accent),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: const TextStyle(color: WashiSurface.ink, fontWeight: FontWeight.w700, fontSize: 16)),
-                const SizedBox(height: 3),
-                Text(subtitle, style: const TextStyle(color: WashiSurface.mutedInk, fontSize: 12, height: 1.35)),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

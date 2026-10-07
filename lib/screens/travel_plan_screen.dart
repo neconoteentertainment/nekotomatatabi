@@ -8,7 +8,10 @@ import 'package:gal/gal.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../models/favorite_site.dart';
+import '../models/local_item.dart';
 import '../models/travel_plan.dart';
 import '../services/app_repository.dart';
 import '../widgets/app_scaffold.dart';
@@ -119,6 +122,8 @@ class _TravelPlanScreenState extends State<TravelPlanScreen> {
     final minute = TextEditingController(text: parsed.minute.toString().padLeft(2, '0'));
     final title = TextEditingController(text: original?.title ?? '');
     final memo = TextEditingController(text: original?.memo ?? '');
+    var selectedPrefecture = original?.sitePrefecture ?? '';
+    var selectedSiteUrl = original?.siteUrl ?? '';
     String? timeError;
 
     return showDialog<TravelPlanItem>(
@@ -126,22 +131,69 @@ class _TravelPlanScreenState extends State<TravelPlanScreen> {
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setLocalState) => AlertDialog(
           title: Text(original == null ? '予定を追加' : '予定を編集'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
+          content: SizedBox(
+            width: 440,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Expanded(child: TextField(controller: hour, keyboardType: TextInputType.number, textAlign: TextAlign.center, maxLength: 2, inputFormatters: [FilteringTextInputFormatter.digitsOnly], decoration: const InputDecoration(labelText: '時', counterText: ''))),
-                  const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text(':', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold))),
-                  Expanded(child: TextField(controller: minute, keyboardType: TextInputType.number, textAlign: TextAlign.center, maxLength: 2, inputFormatters: [FilteringTextInputFormatter.digitsOnly], decoration: const InputDecoration(labelText: '分', counterText: ''))),
+                  Row(
+                    children: [
+                      Expanded(child: TextField(controller: hour, keyboardType: TextInputType.number, textAlign: TextAlign.center, maxLength: 2, inputFormatters: [FilteringTextInputFormatter.digitsOnly], decoration: const InputDecoration(labelText: '時', counterText: ''))),
+                      const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text(':', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold))),
+                      Expanded(child: TextField(controller: minute, keyboardType: TextInputType.number, textAlign: TextAlign.center, maxLength: 2, inputFormatters: [FilteringTextInputFormatter.digitsOnly], decoration: const InputDecoration(labelText: '分', counterText: ''))),
+                    ],
+                  ),
+                  if (timeError != null) Padding(padding: const EdgeInsets.only(top: 6), child: Text(timeError!, style: TextStyle(color: Theme.of(context).colorScheme.error))),
+                  const SizedBox(height: 10),
+                  TextField(controller: title, decoration: const InputDecoration(labelText: '予定・行き先')),
+                  const SizedBox(height: 10),
+                  TextField(controller: memo, maxLines: 2, decoration: const InputDecoration(labelText: 'メモ（任意）')),
+                  const SizedBox(height: 18),
+                  const Text('Webサイト（任意）', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String>(
+                    value: selectedPrefecture.isEmpty ? null : selectedPrefecture,
+                    decoration: const InputDecoration(labelText: '都道府県', prefixIcon: Icon(Icons.map_outlined)),
+                    items: localItemPrefectures.map((prefecture) => DropdownMenuItem(value: prefecture, child: Text(prefecture))).toList(growable: false),
+                    onChanged: (value) => setLocalState(() {
+                      selectedPrefecture = value ?? '';
+                      selectedSiteUrl = '';
+                    }),
+                  ),
+                  if (selectedPrefecture.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    Builder(builder: (context) {
+                      final sites = _sitesForSelection(selectedPrefecture, original);
+                      if (sites.isEmpty) {
+                        return const Text('この都道府県にはお気に入りサイトが登録されていません。');
+                      }
+                      return DropdownButtonFormField<String>(
+                        key: ValueKey('favorite-site-$selectedPrefecture'),
+                        value: sites.any((site) => site.url == selectedSiteUrl) ? selectedSiteUrl : null,
+                        decoration: const InputDecoration(labelText: 'お気に入りのサイト', prefixIcon: Icon(Icons.bookmark_outline)),
+                        isExpanded: true,
+                        items: sites.map((site) => DropdownMenuItem(value: site.url, child: Text(_siteLabel(site), overflow: TextOverflow.ellipsis))).toList(growable: false),
+                        onChanged: (value) => setLocalState(() => selectedSiteUrl = value ?? ''),
+                      );
+                    }),
+                  ],
+                  if (selectedSiteUrl.isNotEmpty)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                        onPressed: () => setLocalState(() {
+                          selectedPrefecture = '';
+                          selectedSiteUrl = '';
+                        }),
+                        icon: const Icon(Icons.link_off),
+                        label: const Text('Webサイトの選択を解除'),
+                      ),
+                    ),
                 ],
               ),
-              if (timeError != null) Padding(padding: const EdgeInsets.only(top: 6), child: Text(timeError!, style: TextStyle(color: Theme.of(context).colorScheme.error))),
-              const SizedBox(height: 10),
-              TextField(controller: title, decoration: const InputDecoration(labelText: '予定・行き先')),
-              const SizedBox(height: 10),
-              TextField(controller: memo, maxLines: 2, decoration: const InputDecoration(labelText: 'メモ（任意）')),
-            ],
+            ),
           ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('キャンセル')),
@@ -155,7 +207,18 @@ class _TravelPlanScreenState extends State<TravelPlanScreen> {
                 }
                 if (title.text.trim().isEmpty) return;
                 final time = '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
-                Navigator.pop(dialogContext, TravelPlanItem(time: time, title: title.text.trim(), memo: memo.text.trim()));
+                final site = _selectedSite(selectedPrefecture, selectedSiteUrl, original);
+                Navigator.pop(
+                  dialogContext,
+                  TravelPlanItem(
+                    time: time,
+                    title: title.text.trim(),
+                    memo: memo.text.trim(),
+                    siteTitle: site == null ? '' : _siteLabel(site),
+                    siteUrl: site?.url ?? '',
+                    sitePrefecture: site?.prefecture ?? '',
+                  ),
+                );
               },
               child: const Text('決定'),
             ),
@@ -163,6 +226,48 @@ class _TravelPlanScreenState extends State<TravelPlanScreen> {
         ),
       ),
     );
+  }
+
+  List<FavoriteSite> _sitesForSelection(String prefecture, TravelPlanItem? original) {
+    final seenUrls = <String>{};
+    final sites = widget.repository
+        .favoriteSitesFor(prefecture)
+        .where((site) => site.url.isNotEmpty && seenUrls.add(site.url))
+        .toList(growable: true);
+    if (original != null &&
+        original.sitePrefecture == prefecture &&
+        original.siteUrl.isNotEmpty &&
+        !sites.any((site) => site.url == original.siteUrl)) {
+      sites.add(FavoriteSite(
+        id: 'travel_plan_saved_site',
+        prefecture: prefecture,
+        title: original.siteTitle,
+        url: original.siteUrl,
+        createdAt: DateTime.fromMillisecondsSinceEpoch(0),
+      ));
+    }
+    return sites;
+  }
+
+  FavoriteSite? _selectedSite(String prefecture, String url, TravelPlanItem? original) {
+    if (prefecture.isEmpty || url.isEmpty) return null;
+    for (final site in _sitesForSelection(prefecture, original)) {
+      if (site.url == url) return site;
+    }
+    return null;
+  }
+
+  String _siteLabel(FavoriteSite site) => site.title.trim().isEmpty ? site.url : site.title.trim();
+
+  Future<void> _openItemSite(TravelPlanItem item) async {
+    final uri = Uri.tryParse(item.siteUrl);
+    if (uri == null ||
+        !uri.hasAuthority ||
+        (uri.scheme != 'http' && uri.scheme != 'https') ||
+        !await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Webサイトを開けませんでした。')));
+    }
   }
 
   TimeOfDay? _parseTime(String? value) {
@@ -287,11 +392,59 @@ class _TravelPlanScreenState extends State<TravelPlanScreen> {
                       childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                       children: [
                         if (plan.items.isEmpty) const ListTile(title: Text('予定はまだ登録されていません。')),
-                        ...plan.items.map((e) => ListTile(dense: true, leading: SizedBox(width: 48, child: Text(e.time)), title: Text(e.title), subtitle: e.memo.isEmpty ? null : Text(e.memo))),
+                        ...plan.items.map((e) => ListTile(
+                              dense: false,
+                              leading: SizedBox(
+                                width: 66,
+                                child: Text(
+                                  e.time,
+                                  style: const TextStyle(color: WashiSurface.ink, fontSize: 21, fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                              title: e.hasSite
+                                  ? Tooltip(
+                                      message: e.siteTitle.isEmpty ? e.siteUrl : e.siteTitle,
+                                      child: InkWell(
+                                        onTap: () => _openItemSite(e),
+                                        child: Text(
+                                          e.title,
+                                          style: const TextStyle(
+                                            color: Color(0xFF1565C0),
+                                            fontSize: 24,
+                                            fontWeight: FontWeight.w600,
+                                            decoration: TextDecoration.underline,
+                                            decorationColor: Color(0xFF1565C0),
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                  : Text(
+                                      e.title,
+                                      style: const TextStyle(color: WashiSurface.ink, fontSize: 24, fontWeight: FontWeight.w600),
+                                    ),
+                              subtitle: e.memo.isEmpty
+                                  ? null
+                                  : Text(e.memo, style: const TextStyle(color: WashiSurface.mutedInk, fontSize: 21)),
+                            )),
                         Wrap(spacing: 8, children: [
-                          OutlinedButton.icon(onPressed: () => _editPlan(plan), icon: const Icon(Icons.edit), label: const Text('編集')),
-                          OutlinedButton.icon(onPressed: () => _showQr(plan), icon: const Icon(Icons.qr_code_2), label: const Text('QR共有')),
-                          TextButton.icon(onPressed: () => widget.repository.deleteTravelPlan(plan.id), icon: const Icon(Icons.delete_outline), label: const Text('削除')),
+                          OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(foregroundColor: WashiSurface.ink, side: const BorderSide(color: WashiSurface.border)),
+                            onPressed: () => _editPlan(plan),
+                            icon: const Icon(Icons.edit),
+                            label: const Text('編集'),
+                          ),
+                          OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(foregroundColor: WashiSurface.ink, side: const BorderSide(color: WashiSurface.border)),
+                            onPressed: () => _showQr(plan),
+                            icon: const Icon(Icons.qr_code_2),
+                            label: const Text('QR共有'),
+                          ),
+                          TextButton.icon(
+                            style: TextButton.styleFrom(foregroundColor: WashiSurface.ink),
+                            onPressed: () => widget.repository.deleteTravelPlan(plan.id),
+                            icon: const Icon(Icons.delete_outline),
+                            label: const Text('削除'),
+                          ),
                         ]),
                       ],
                     ),

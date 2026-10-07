@@ -185,7 +185,7 @@ class _RecordScreenState extends State<RecordScreen> {
                   _radiusMeters == 300
                       ? '通常は300m圏内を検索します。巨大なテーマパークなどでは1kmに切り替えてください。'
                       : '1km圏内を検索します。候補が多くなる場合があります。',
-                  style: Theme.of(context).textTheme.bodySmall,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: WashiSurface.mutedInk),
                 ),
                 const SizedBox(height: 10),
                 FilledButton.icon(
@@ -211,7 +211,12 @@ class _RecordScreenState extends State<RecordScreen> {
                       padding: const EdgeInsets.only(top: 8),
                       child: Text('周辺施設取得失敗: $_placeError', style: TextStyle(color: Theme.of(context).colorScheme.error)),
                     ),
-                  TextButton.icon(onPressed: _manualRecord, icon: const Icon(Icons.edit_location_alt), label: const Text('候補にない場所を手入力')),
+                  TextButton.icon(
+                    style: TextButton.styleFrom(foregroundColor: WashiSurface.ink),
+                    onPressed: _manualRecord,
+                    icon: const Icon(Icons.edit_location_alt),
+                    label: const Text('候補にない場所を手入力'),
+                  ),
                 ],
               ]),
             ),
@@ -240,7 +245,10 @@ class _RecordScreenState extends State<RecordScreen> {
               child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                 const Text('② 写真を撮る', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
-                const Text('自作スタンプや文字を複数重ねて撮影できます。写真は選択した訪問記録に保存されます。'),
+                Text(
+                  '自作スタンプや文字を複数重ねて撮影できます。写真は選択した訪問記録に保存されます。',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: WashiSurface.mutedInk),
+                ),
                 const SizedBox(height: 12),
                 if (widget.repository.memories.isNotEmpty) ...[
                   Container(

@@ -357,7 +357,7 @@ class _HomeFeatureCard extends StatelessWidget {
                                   shape: BoxShape.circle,
                                   border: Border.all(color: palette.accent),
                                 ),
-                                child: Icon(data.icon, color: palette.accent, size: compact ? 22 : 26),
+                                child: Icon(data.icon, color: palette.homeBadgeForeground, size: compact ? 22 : 26),
                               ),
                             ),
                           ),

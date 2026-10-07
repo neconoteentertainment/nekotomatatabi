@@ -2,22 +2,40 @@ import 'dart:convert';
 import 'dart:io';
 
 class TravelPlanItem {
-  const TravelPlanItem({required this.time, required this.title, this.memo = ''});
+  const TravelPlanItem({
+    required this.time,
+    required this.title,
+    this.memo = '',
+    this.siteTitle = '',
+    this.siteUrl = '',
+    this.sitePrefecture = '',
+  });
 
   final String time;
   final String title;
   final String memo;
+  final String siteTitle;
+  final String siteUrl;
+  final String sitePrefecture;
+
+  bool get hasSite => siteUrl.trim().isNotEmpty;
 
   Map<String, dynamic> toJson() => {
         'time': time,
         'title': title,
         'memo': memo,
+        'siteTitle': siteTitle,
+        'siteUrl': siteUrl,
+        'sitePrefecture': sitePrefecture,
       };
 
   factory TravelPlanItem.fromJson(Map<String, dynamic> json) => TravelPlanItem(
         time: json['time'] as String? ?? '',
         title: json['title'] as String? ?? '',
         memo: json['memo'] as String? ?? '',
+        siteTitle: json['siteTitle'] as String? ?? '',
+        siteUrl: json['siteUrl'] as String? ?? '',
+        sitePrefecture: json['sitePrefecture'] as String? ?? '',
       );
 }
 
