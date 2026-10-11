@@ -312,14 +312,23 @@ class _MemoryCard extends StatelessWidget {
                             ),
                           ),
                         ),
-                        const Positioned(
+                        Positioned(
                           right: 6,
                           bottom: 6,
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
-                            child: Padding(
-                              padding: EdgeInsets.all(5),
-                              child: Icon(Icons.fullscreen, color: Colors.white, size: 18),
+                          child: Material(
+                            color: Colors.black54,
+                            shape: const CircleBorder(),
+                            child: InkWell(
+                              customBorder: const CircleBorder(),
+                              onTap: () => Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => _PhotoViewer(paths: photos, initialIndex: index),
+                                ),
+                              ),
+                              child: const Padding(
+                                padding: EdgeInsets.all(5),
+                                child: Icon(Icons.fullscreen, color: Colors.white, size: 18),
+                              ),
                             ),
                           ),
                         ),

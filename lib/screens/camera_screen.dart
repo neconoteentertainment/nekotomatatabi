@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
 
+import '../models/custom_stamp.dart';
 import '../models/local_item.dart';
 import '../services/app_repository.dart';
 import '../services/storage_service.dart';
@@ -799,7 +800,7 @@ class _CameraScreenState extends State<CameraScreen> {
                             children: [
                               ActionChip(avatar: const Icon(Icons.text_fields), label: const Text('文字追加'), onPressed: () async { await _addText(); if (mounted) setState(() => _showStampPanel = false); }),
                               const SizedBox(width: 8),
-                              ...List.generate(4, (i) {
+                              ...List.generate(customStampSlotCount, (i) {
                                 final path = widget.repository.stampPaths[i];
                                 return Padding(
                                   padding: const EdgeInsets.only(right: 8),

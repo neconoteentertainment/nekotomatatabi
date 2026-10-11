@@ -25,12 +25,15 @@ Future<TravelExpense?> showExpenseEditorDialog(
   TravelExpense? original,
   int? initialAmount,
   String initialMemo = '',
+  String initialTripName = '',
   List<TravelPlan> plans = const [],
 }) async {
   final amount = TextEditingController(
     text: (original?.amount ?? initialAmount)?.toString() ?? '',
   );
-  final trip = TextEditingController(text: original?.tripName ?? '');
+  final trip = TextEditingController(
+    text: original?.tripName ?? initialTripName,
+  );
   final memo = TextEditingController(text: original?.memo ?? initialMemo);
   final planTitles = plans
       .map((plan) => plan.title.trim())
@@ -169,10 +172,14 @@ class TravelExpenseScreen extends StatefulWidget {
 class _TravelExpenseScreenState extends State<TravelExpenseScreen> {
   DateTime _month = DateTime(DateTime.now().year, DateTime.now().month);
 
-  Future<void> _edit([TravelExpense? original]) async {
+  Future<void> _edit([
+    TravelExpense? original,
+    String initialTripName = '',
+  ]) async {
     final expense = await showExpenseEditorDialog(
       context,
       original: original,
+      initialTripName: initialTripName,
       plans: widget.repository.travelPlans,
     );
     if (expense != null) await widget.repository.saveTravelExpense(expense);
@@ -343,9 +350,20 @@ class _TravelExpenseScreenState extends State<TravelExpenseScreen> {
                         leading: const Icon(Icons.luggage_outlined),
                         title: Text(entry.key, style: const TextStyle(fontWeight: FontWeight.bold)),
                         subtitle: Text('${entry.value.length}件'),
-                        trailing: Text(
-                          _yen(entry.value.fold<int>(0, (sum, e) => sum + e.amount)),
-                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _yen(entry.value.fold<int>(0, (sum, e) => sum + e.amount)),
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(width: 4),
+                            IconButton(
+                              tooltip: entry.key == '未分類' ? '未分類の支出を追加' : 'この旅に支出を追加',
+                              onPressed: () => _edit(null, entry.key == '未分類' ? '' : entry.key),
+                              icon: const Icon(Icons.add_circle_outline),
+                            ),
+                          ],
                         ),
                         children: [
                           for (final expense in entry.value)

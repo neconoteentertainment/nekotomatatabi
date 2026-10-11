@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../models/custom_stamp.dart';
 import '../services/app_repository.dart';
 import '../widgets/app_scaffold.dart';
 import '../widgets/washi_surface.dart';
@@ -23,10 +24,9 @@ class StampEditorScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppScaffold(
       title: 'スタンプ登録',
+      subtitle: 'STAMP COLLECTION',
       child: AnimatedBuilder(animation: repository, builder: (context, _) => ListView(padding: const EdgeInsets.all(16), children: [
-        const WashiCard(child: Padding(padding: EdgeInsets.all(16), child: Text('背景を透過した猫のPNG画像などを登録してください。全部で4つまで保存できます。画像はアプリ内へコピーして保持します。'))),
-        const SizedBox(height: 8),
-        ...List.generate(4, (i) {
+        ...List.generate(customStampSlotCount, (i) {
           final path = repository.stampPaths[i];
           final exists = path != null && File(path).existsSync();
           return WashiCard(child: Padding(padding: const EdgeInsets.all(12), child: Row(children: [

@@ -360,6 +360,7 @@ class _TravelPlanScreenState extends State<TravelPlanScreen> {
   Widget build(BuildContext context) {
     return AppScaffold(
       title: '旅の予定を立てる',
+      subtitle: 'PLAN YOUR JOURNEY',
       actions: [
         PopupMenuButton<String>(
           tooltip: 'QRコードを読み取る',
@@ -386,7 +387,6 @@ class _TravelPlanScreenState extends State<TravelPlanScreen> {
               if (plans.isEmpty) const WashiCard(child: Padding(padding: EdgeInsets.all(18), child: Text('まだ予定がありません。旅行当日の時刻と行き先を登録できます。'))),
               ...plans.map((plan) => WashiCard(
                     child: ExpansionTile(
-                      leading: const CircleAvatar(child: Icon(Icons.route)),
                       title: Text(plan.title),
                       subtitle: Text('${plan.date.year}/${plan.date.month}/${plan.date.day} ・ ${plan.items.length}件'),
                       childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
@@ -395,10 +395,10 @@ class _TravelPlanScreenState extends State<TravelPlanScreen> {
                         ...plan.items.map((e) => ListTile(
                               dense: false,
                               leading: SizedBox(
-                                width: 66,
+                                width: 56,
                                 child: Text(
                                   e.time,
-                                  style: const TextStyle(color: WashiSurface.ink, fontSize: 21, fontWeight: FontWeight.w600),
+                                  style: const TextStyle(color: WashiSurface.ink, fontSize: 17, fontWeight: FontWeight.w600),
                                 ),
                               ),
                               title: e.hasSite
@@ -410,7 +410,7 @@ class _TravelPlanScreenState extends State<TravelPlanScreen> {
                                           e.title,
                                           style: const TextStyle(
                                             color: Color(0xFF1565C0),
-                                            fontSize: 24,
+                                            fontSize: 19,
                                             fontWeight: FontWeight.w600,
                                             decoration: TextDecoration.underline,
                                             decorationColor: Color(0xFF1565C0),
@@ -420,11 +420,11 @@ class _TravelPlanScreenState extends State<TravelPlanScreen> {
                                     )
                                   : Text(
                                       e.title,
-                                      style: const TextStyle(color: WashiSurface.ink, fontSize: 24, fontWeight: FontWeight.w600),
+                                      style: const TextStyle(color: WashiSurface.ink, fontSize: 19, fontWeight: FontWeight.w600),
                                     ),
                               subtitle: e.memo.isEmpty
                                   ? null
-                                  : Text(e.memo, style: const TextStyle(color: WashiSurface.mutedInk, fontSize: 21)),
+                                  : Text(e.memo, style: const TextStyle(color: WashiSurface.mutedInk, fontSize: 17)),
                             )),
                         Wrap(spacing: 8, children: [
                           OutlinedButton.icon(

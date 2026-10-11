@@ -15,6 +15,7 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppScaffold(
       title: '設定',
+      subtitle: 'SETTINGS',
       child: AnimatedBuilder(
         animation: repository,
         builder: (context, _) => ListView(
@@ -38,7 +39,6 @@ class SettingsScreen extends StatelessWidget {
                         if (value != null) repository.setColorTheme(value);
                       },
                       title: Text(theme.label),
-                      secondary: _ThemePreview(theme: theme),
                     ),
                 ],
               ),
@@ -64,7 +64,6 @@ class SettingsScreen extends StatelessWidget {
                           }
                         : null,
                     title: const Text('海辺の朝'),
-                    secondary: const Icon(Icons.waves_outlined),
                   ),
                   RadioListTile<String>(
                     value: 'odayaka',
@@ -75,7 +74,6 @@ class SettingsScreen extends StatelessWidget {
                           }
                         : null,
                     title: const Text('穏やかな朝'),
-                    secondary: const Icon(Icons.wb_twilight_outlined),
                   ),
                 ],
               ),
@@ -107,58 +105,9 @@ class SettingsScreen extends StatelessWidget {
                 );
               },
             ),
-            const WashiCard(
-              child: ListTile(
-                leading: Icon(Icons.info_outline),
-                title: Text('アプリについて'),
-                subtitle: Text('旅の記録・予定・スタンプなどのデータは端末内に保存されます。'),
-              ),
-            ),
           ],
         ),
       ),
     );
   }
-}
-
-class _ThemePreview extends StatelessWidget {
-  const _ThemePreview({required this.theme});
-
-  final AppColorTheme theme;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = AppPalette.forTheme(theme);
-    return Container(
-      width: 42,
-      height: 28,
-      decoration: BoxDecoration(
-        color: palette.background,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: WashiSurface.border),
-      ),
-      alignment: Alignment.center,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _ColorDot(color: palette.panel),
-          const SizedBox(width: 3),
-          _ColorDot(color: palette.accent),
-        ],
-      ),
-    );
-  }
-}
-
-class _ColorDot extends StatelessWidget {
-  const _ColorDot({required this.color});
-
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) => Container(
-        width: 9,
-        height: 9,
-        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-      );
 }

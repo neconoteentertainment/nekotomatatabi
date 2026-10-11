@@ -5,9 +5,10 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models/custom_stamp.dart';
+import '../models/travel_expense.dart';
 import '../models/travel_memory.dart';
 import '../models/travel_plan.dart';
-import '../models/travel_expense.dart';
 import '../models/favorite_site.dart';
 
 class StorageService {
@@ -194,7 +195,7 @@ class StorageService {
     final prefs = await SharedPreferences.getInstance();
     final values = prefs.getStringList(_stampPathsKey) ?? const [];
     final dir = await getApplicationDocumentsDirectory();
-    return List<String?>.generate(4, (i) {
+    return List<String?>.generate(customStampSlotCount, (i) {
       if (i >= values.length || values[i].isEmpty) return null;
       return _resolveStoredPath(values[i], dir.path);
     });

@@ -2,8 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 
-import '../models/local_item.dart';
+import '../models/custom_stamp.dart';
 import '../models/favorite_site.dart';
+import '../models/local_item.dart';
 import '../models/travel_memory.dart';
 import '../models/travel_plan.dart';
 import '../models/travel_expense.dart';
@@ -19,7 +20,7 @@ class AppRepository extends ChangeNotifier {
   final AppAudioService _audio;
   final ShareInboxService _shareInbox = ShareInboxService();
   List<TravelMemory> _memories = [];
-  List<String?> _stampPaths = List<String?>.filled(4, null);
+  List<String?> _stampPaths = List<String?>.filled(customStampSlotCount, null);
   List<TravelPlan> _travelPlans = [];
   List<TravelExpense> _travelExpenses = [];
   List<FavoriteSite> _favoriteSites = [];
@@ -27,8 +28,6 @@ class AppRepository extends ChangeNotifier {
   bool _bgmEnabled = true;
   String _bgmTrack = 'umibe';
   AppColorTheme _colorTheme = AppColorTheme.classic;
-
-  static const _testBasePoints = 30;
 
   List<TravelMemory> get memories => List.unmodifiable(_memories);
   List<String?> get stampPaths => List.unmodifiable(_stampPaths);
@@ -50,14 +49,9 @@ class AppRepository extends ChangeNotifier {
   }
 
   int pointsForPrefecture(String prefecture) {
-    final count = _uniqueMemories(
+    return _uniqueMemories(
       _memories.where((m) => m.prefecture == prefecture),
     ).length;
-    // 画像確認用ビルドでは、実装済みの全都道府県を30Pから開始する。
-    // リリース時はこのテスト加算を0へ戻す。
-    final testBonus =
-        localItemPrefectures.contains(prefecture) ? _testBasePoints : 0;
-    return testBonus + count;
   }
 
   bool isLocalItemUnlocked(LocalItem item) =>

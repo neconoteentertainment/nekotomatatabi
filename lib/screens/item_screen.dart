@@ -16,6 +16,7 @@ class ItemScreen extends StatelessWidget {
     final palette = AppPalette.of(context);
     return AppScaffold(
       title: '名産品集め',
+      subtitle: 'LOCAL TREASURES',
       child: AnimatedBuilder(
         animation: repository,
         builder: (_, __) => ListView(
@@ -53,24 +54,6 @@ class ItemScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
             ],
-            const SizedBox(height: 8),
-            const WashiCard(
-              child: ListTile(
-                leading: CircleAvatar(child: Icon(Icons.lock_outline)),
-                title: Text('その他の地域'),
-                subtitle: Text('名産スタンプは今後追加予定です。'),
-                enabled: false,
-              ),
-            ),
-            const SizedBox(height: 16),
-            const WashiSurface(
-              padding: EdgeInsets.all(12),
-              borderRadius: 14,
-              child: Text(
-                '※動作確認用として、現在は東海4県のみ各30Pから開始しています。リリース時は0P開始に変更します。',
-                style: TextStyle(color: WashiSurface.mutedInk, fontSize: 12),
-              ),
-            ),
           ],
         ),
       ),
@@ -182,20 +165,29 @@ class _LocalItemListScreen extends StatelessWidget {
                             child: Stack(
                               fit: StackFit.expand,
                               children: [
-                                Image.asset(
-                                  item.assetPath,
-                                  fit: BoxFit.contain,
-                                  color: unlocked ? null : Colors.black54,
-                                  colorBlendMode: unlocked ? null : BlendMode.srcATop,
-                                  errorBuilder: (_, __, ___) => const Icon(
-                                    Icons.image_not_supported_outlined,
-                                    color: WashiSurface.mutedInk,
-                                    size: 34,
-                                  ),
-                                ),
-                                if (!unlocked)
-                                  const Center(
-                                    child: Icon(Icons.lock, color: Colors.white70, size: 34),
+                                if (unlocked)
+                                  Image.asset(
+                                    item.assetPath,
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (_, __, ___) => const Icon(
+                                      Icons.image_not_supported_outlined,
+                                      color: WashiSurface.mutedInk,
+                                      size: 34,
+                                    ),
+                                  )
+                                else
+                                  DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      color: WashiSurface.ink.withValues(alpha: .10),
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                    child: const Center(
+                                      child: Icon(
+                                        Icons.lock_outline,
+                                        color: WashiSurface.mutedInk,
+                                        size: 38,
+                                      ),
+                                    ),
                                   ),
                               ],
                             ),
@@ -220,7 +212,34 @@ class _LocalItemListScreen extends StatelessWidget {
                                   ],
                                 ),
                                 const SizedBox(height: 6),
-                                Text(item.description, style: const TextStyle(color: WashiSurface.mutedInk, height: 1.4)),
+                                if (unlocked)
+                                  Text(
+                                    item.description,
+                                    style: const TextStyle(
+                                      color: WashiSurface.mutedInk,
+                                      height: 1.4,
+                                    ),
+                                  )
+                                else
+                                  const Row(
+                                    children: [
+                                      Icon(
+                                        Icons.lock_outline,
+                                        color: WashiSurface.mutedInk,
+                                        size: 16,
+                                      ),
+                                      SizedBox(width: 6),
+                                      Expanded(
+                                        child: Text(
+                                          'ポイント達成で説明を表示します',
+                                          style: TextStyle(
+                                            color: WashiSurface.mutedInk,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 const SizedBox(height: 8),
                                 Text(
                                   unlocked ? '入手済み・カメラで使用できます' : 'あと${item.threshold - points}P',
