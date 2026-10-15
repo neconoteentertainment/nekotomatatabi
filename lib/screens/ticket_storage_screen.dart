@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import '../theme/app_theme.dart';
 import '../widgets/app_scaffold.dart';
 import '../widgets/washi_surface.dart';
 
@@ -128,6 +129,25 @@ class _TicketStorageScreenState extends State<TicketStorageScreen> {
   }
 
   Future<void> _deleteImage(File file) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('画像を削除しますか？'),
+        content: const Text('この画像を電子チケット保存から削除します。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('キャンセル'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red.shade700),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('削除'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
     await file.delete();
     if (mounted) setState(() {});
   }
@@ -227,19 +247,27 @@ class _FolderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     return WashiCard(
       child: ExpansionTile(
         leading: const Icon(Icons.folder_outlined),
         title: Text(p.basename(folder.path), style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Text('${images.length}枚'),
         trailing: PopupMenuButton<String>(
+          icon: const Icon(Icons.more_vert, color: Colors.black),
           onSelected: (value) {
             if (value == 'add') onAdd();
             if (value == 'delete') onDeleteFolder();
           },
-          itemBuilder: (_) => const [
-            PopupMenuItem(value: 'add', child: Text('画像を追加')),
-            PopupMenuItem(value: 'delete', child: Text('フォルダを削除')),
+          itemBuilder: (_) => [
+            PopupMenuItem(
+              value: 'add',
+              child: Text('画像を追加', style: TextStyle(color: palette.onPanel)),
+            ),
+            PopupMenuItem(
+              value: 'delete',
+              child: Text('フォルダを削除', style: TextStyle(color: palette.onPanel)),
+            ),
           ],
         ),
         children: [
@@ -252,6 +280,10 @@ class _FolderCard extends StatelessWidget {
                   onPressed: onAdd,
                   icon: const Icon(Icons.add_photo_alternate_outlined),
                   label: const Text('スマホから画像を追加'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: WashiSurface.ink,
+                    side: const BorderSide(color: WashiSurface.border),
+                  ),
                 ),
                 if (images.isNotEmpty)
                   GridView.builder(

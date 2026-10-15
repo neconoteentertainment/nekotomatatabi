@@ -34,7 +34,7 @@ class CreatorWebsiteScreen extends StatelessWidget {
           WashiSurface(
             padding: const EdgeInsets.all(16),
             child: const Text(
-              'Xアカウントで今後の開発アプリを載せていきますので、\nフォローいただけると嬉しいです。',
+              'Xアカウントで今後の開発アプリを載せていきますので、フォローいただけると嬉しいです。',
               style: TextStyle(height: 1.6),
             ),
           ),

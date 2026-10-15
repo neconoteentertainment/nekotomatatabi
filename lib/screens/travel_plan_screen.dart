@@ -32,6 +32,9 @@ class _TravelPlanScreenState extends State<TravelPlanScreen> {
     var date = original?.date ?? DateTime.now();
     final title = TextEditingController(text: original?.title ?? '');
     final items = <TravelPlanItem>[...?original?.items];
+    var rememberedPrefecture = items.reversed
+        .map((item) => item.sitePrefecture)
+        .firstWhere((prefecture) => prefecture.isNotEmpty, orElse: () => '');
 
     final result = await showDialog<TravelPlan>(
       context: context,
@@ -66,12 +69,27 @@ class _TravelPlanScreenState extends State<TravelPlanScreen> {
                         leading: Text(item.time.isEmpty ? '--:--' : item.time),
                         title: Text(item.title),
                         subtitle: item.memo.isEmpty ? null : Text(item.memo),
-                        trailing: IconButton(icon: const Icon(Icons.delete_outline), onPressed: () => setLocalState(() => items.removeAt(i))),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete_outline),
+                          onPressed: () async {
+                            final confirmed = await _confirmDelete(
+                              context,
+                              title: '予定を削除しますか？',
+                              message: '「${item.title}」を旅の計画から削除します。',
+                            );
+                            if (confirmed) setLocalState(() => items.removeAt(i));
+                          },
+                        ),
                         onTap: () async {
-                          final edited = await _editPlanItem(context, item);
+                          final edited = await _editPlanItem(
+                            context,
+                            item,
+                            initialPrefecture: rememberedPrefecture,
+                          );
                           if (edited != null) {
                             setLocalState(() {
                               items[i] = edited;
+                              rememberedPrefecture = edited.sitePrefecture;
                               items.sort((a, b) => a.time.compareTo(b.time));
                             });
                           }
@@ -81,10 +99,15 @@ class _TravelPlanScreenState extends State<TravelPlanScreen> {
                   }),
                   OutlinedButton.icon(
                     onPressed: () async {
-                      final added = await _editPlanItem(context, null);
+                      final added = await _editPlanItem(
+                        context,
+                        null,
+                        initialPrefecture: rememberedPrefecture,
+                      );
                       if (added != null) {
                         setLocalState(() {
                           items.add(added);
+                          rememberedPrefecture = added.sitePrefecture;
                           items.sort((a, b) => a.time.compareTo(b.time));
                         });
                       }
@@ -116,13 +139,18 @@ class _TravelPlanScreenState extends State<TravelPlanScreen> {
     if (result != null) await widget.repository.saveTravelPlan(result);
   }
 
-  Future<TravelPlanItem?> _editPlanItem(BuildContext context, TravelPlanItem? original) async {
+  Future<TravelPlanItem?> _editPlanItem(
+    BuildContext context,
+    TravelPlanItem? original, {
+    String initialPrefecture = '',
+  }) async {
     final parsed = _parseTime(original?.time) ?? TimeOfDay.now();
     final hour = TextEditingController(text: parsed.hour.toString().padLeft(2, '0'));
     final minute = TextEditingController(text: parsed.minute.toString().padLeft(2, '0'));
     final title = TextEditingController(text: original?.title ?? '');
     final memo = TextEditingController(text: original?.memo ?? '');
     var selectedPrefecture = original?.sitePrefecture ?? '';
+    if (selectedPrefecture.isEmpty) selectedPrefecture = initialPrefecture;
     var selectedSiteUrl = original?.siteUrl ?? '';
     String? timeError;
 
@@ -156,7 +184,10 @@ class _TravelPlanScreenState extends State<TravelPlanScreen> {
                   DropdownButtonFormField<String>(
                     value: selectedPrefecture.isEmpty ? null : selectedPrefecture,
                     decoration: const InputDecoration(labelText: '都道府県', prefixIcon: Icon(Icons.map_outlined)),
-                    items: localItemPrefectures.map((prefecture) => DropdownMenuItem(value: prefecture, child: Text(prefecture))).toList(growable: false),
+                    items: [
+                      ...localItemPrefectures,
+                      favoriteSiteOtherCategory,
+                    ].map((prefecture) => DropdownMenuItem(value: prefecture, child: Text(prefecture))).toList(growable: false),
                     onChanged: (value) => setLocalState(() {
                       selectedPrefecture = value ?? '';
                       selectedSiteUrl = '';
@@ -216,7 +247,7 @@ class _TravelPlanScreenState extends State<TravelPlanScreen> {
                     memo: memo.text.trim(),
                     siteTitle: site == null ? '' : _siteLabel(site),
                     siteUrl: site?.url ?? '',
-                    sitePrefecture: site?.prefecture ?? '',
+                    sitePrefecture: selectedPrefecture,
                   ),
                 );
               },
@@ -258,6 +289,41 @@ class _TravelPlanScreenState extends State<TravelPlanScreen> {
   }
 
   String _siteLabel(FavoriteSite site) => site.title.trim().isEmpty ? site.url : site.title.trim();
+
+  Future<bool> _confirmDelete(
+    BuildContext context, {
+    required String title,
+    required String message,
+  }) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(title),
+            content: Text(message),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('キャンセル'),
+              ),
+              FilledButton(
+                style: FilledButton.styleFrom(backgroundColor: Colors.red.shade700),
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('削除'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  Future<void> _deletePlan(TravelPlan plan) async {
+    final confirmed = await _confirmDelete(
+      context,
+      title: '旅の計画を削除しますか？',
+      message: '「${plan.title}」と登録されている予定を削除します。',
+    );
+    if (confirmed) await widget.repository.deleteTravelPlan(plan.id);
+  }
 
   Future<void> _openItemSite(TravelPlanItem item) async {
     final uri = Uri.tryParse(item.siteUrl);
@@ -441,7 +507,7 @@ class _TravelPlanScreenState extends State<TravelPlanScreen> {
                           ),
                           TextButton.icon(
                             style: TextButton.styleFrom(foregroundColor: WashiSurface.ink),
-                            onPressed: () => widget.repository.deleteTravelPlan(plan.id),
+                            onPressed: () => _deletePlan(plan),
                             icon: const Icon(Icons.delete_outline),
                             label: const Text('削除'),
                           ),

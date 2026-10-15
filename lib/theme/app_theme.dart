@@ -229,5 +229,11 @@ ThemeData buildAppTheme(AppColorTheme colorTheme) {
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(foregroundColor: palette.accent),
     ),
+    popupMenuTheme: PopupMenuThemeData(
+      color: palette.panel,
+      surfaceTintColor: Colors.transparent,
+      textStyle: TextStyle(color: palette.onPanel),
+      iconColor: palette.onPanel,
+    ),
   );
 }

@@ -30,7 +30,9 @@ class _FavoriteSitesScreenState extends State<FavoriteSitesScreen> {
 
   Future<void> _importRaw(String raw) async {
     final bundle = FavoriteSiteBundle.fromShareText(raw);
-    if (bundle == null || !localItemPrefectures.contains(bundle.prefecture)) {
+    if (bundle == null ||
+        (!localItemPrefectures.contains(bundle.prefecture) &&
+            bundle.prefecture != favoriteSiteOtherCategory)) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('「ねことまた旅」のお気に入りQRコードではありません。')),
@@ -181,6 +183,41 @@ class _FavoriteSitesScreenState extends State<FavoriteSitesScreen> {
                   ),
                 ),
             ],
+            Padding(
+              padding: const EdgeInsets.fromLTRB(4, 12, 4, 6),
+              child: Text(
+                favoriteSiteOtherCategory,
+                style: TextStyle(
+                  color: palette.accent,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: WashiCard(
+                child: ListTile(
+                  leading: const Icon(Icons.more_horiz),
+                  title: const Text(
+                    favoriteSiteOtherCategory,
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(
+                    '${widget.repository.favoriteSitesFor(favoriteSiteOtherCategory).length}件',
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => _PrefectureSitesScreen(
+                        repository: widget.repository,
+                        prefecture: favoriteSiteOtherCategory,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),

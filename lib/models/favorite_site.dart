@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+const favoriteSiteOtherCategory = 'その他';
+
 class FavoriteSite {
   const FavoriteSite({
     required this.id,

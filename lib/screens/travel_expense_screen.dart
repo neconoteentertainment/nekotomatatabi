@@ -329,10 +329,17 @@ class _TravelExpenseScreenState extends State<TravelExpenseScreen> {
                       ].join('  ・  ')),
                       isThreeLine: expense.memo.isNotEmpty,
                       trailing: PopupMenuButton<String>(
+                        icon: const Icon(Icons.more_vert, color: Colors.black),
                         onSelected: (value) => value == 'edit' ? _edit(expense) : _delete(expense),
-                        itemBuilder: (_) => const [
-                          PopupMenuItem(value: 'edit', child: Text('編集')),
-                          PopupMenuItem(value: 'delete', child: Text('削除')),
+                        itemBuilder: (_) => [
+                          PopupMenuItem(
+                            value: 'edit',
+                            child: Text('編集', style: TextStyle(color: palette.onPanel)),
+                          ),
+                          PopupMenuItem(
+                            value: 'delete',
+                            child: Text('削除', style: TextStyle(color: palette.onPanel)),
+                          ),
                         ],
                       ),
                     ),

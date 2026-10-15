@@ -73,7 +73,7 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
                               ),
                               SizedBox(height: 2),
                               Text(
-                                'MEMORIES OF JOURNEYS',
+                                'CAPTURE YOUR JOURNEY',
                                 style: TextStyle(color: palette.accent, fontSize: 9, letterSpacing: 2.1),
                               ),
                             ],
@@ -263,8 +263,8 @@ class _MemoryCard extends StatelessWidget {
                 icon: const Icon(Icons.add_photo_alternate_outlined),
                 label: const Text('スマホの写真から追加'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: palette.accent,
-                  side: BorderSide(color: palette.accent.withValues(alpha: .6)),
+                  foregroundColor: WashiSurface.ink,
+                  side: const BorderSide(color: WashiSurface.border),
                 ),
               ),
             ),
