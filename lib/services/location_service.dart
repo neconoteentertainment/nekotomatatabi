@@ -17,9 +17,11 @@ class LocationService {
   static const _userAgent = 'nekotomatatabi/0.2 (travel memory app)';
   static const _overpassEndpoints = [
     'https://overpass-api.de/api/interpreter',
-    'https://overpass.kumi.systems/api/interpreter',
-    'https://overpass.nchc.org.tw/api/interpreter',
+    'https://overpass.private.coffee/api/interpreter',
+    'https://overpass.osm.jp/api/interpreter',
   ];
+  static const _nearbyPlacesErrorMessage =
+      '周辺観光地を取得できませんでした。通信環境を確認し、少し時間を置いてから再度お試しください。現在地は取得できています。';
 
   Future<Position> getCurrentPosition() async {
     if (!await Geolocator.isLocationServiceEnabled()) {
@@ -50,10 +52,9 @@ class LocationService {
 out center 40;
 ''';
 
-    Object? lastError;
     for (var endpointIndex = 0; endpointIndex < _overpassEndpoints.length; endpointIndex++) {
       final endpoint = _overpassEndpoints[endpointIndex];
-      for (var attempt = 0; attempt < 3; attempt++) {
+      for (var attempt = 0; attempt < 2; attempt++) {
         try {
           final response = await http.post(
             Uri.parse(endpoint),
@@ -64,22 +65,25 @@ out center 40;
           if (response.statusCode == 200) {
             return _parsePlaces(response.body, lat, lon);
           }
-          lastError = 'HTTP ${response.statusCode}';
           if (response.statusCode != 429 && response.statusCode != 502 && response.statusCode != 503 && response.statusCode != 504) {
             break;
           }
-        } on TimeoutException catch (e) {
-          lastError = e;
-        } catch (e) {
-          lastError = e;
+        } on TimeoutException {
+          // 一時的な混雑の可能性があるため、同じ接続先で一度だけ再試行する。
+        } on http.ClientException {
+          // DNS・接続エラーは同じ接続先で再試行せず、次へ切り替える。
+          break;
+        } catch (_) {
+          // 接続先固有のエラーとして扱い、次の接続先へ切り替える。
+          break;
         }
-        if (attempt < 2) await Future<void>.delayed(Duration(milliseconds: 700 * (attempt + 1)));
+        if (attempt == 0) await Future<void>.delayed(const Duration(milliseconds: 700));
       }
       if (endpointIndex < _overpassEndpoints.length - 1) {
         await Future<void>.delayed(const Duration(milliseconds: 600));
       }
     }
-    throw NearbyPlaceFetchException('周辺施設の取得に失敗しました。現在地は取得できています。少し時間を置いて再試行するか、施設名を手入力してください。${lastError == null ? '' : ' ($lastError)'}');
+    throw const NearbyPlaceFetchException(_nearbyPlacesErrorMessage);
   }
 
   List<NearbyPlace> _parsePlaces(String body, double lat, double lon) {

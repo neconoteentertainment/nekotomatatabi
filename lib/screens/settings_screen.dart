@@ -5,6 +5,7 @@ import '../services/ad_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_scaffold.dart';
 import '../widgets/washi_surface.dart';
+import 'app_information_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key, required this.repository});
@@ -14,7 +15,8 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
-      title: '設定',
+      title: '設定・アプリ情報',
+      fitTitle: true,
       subtitle: 'SETTINGS',
       child: AnimatedBuilder(
         animation: repository,
@@ -75,6 +77,30 @@ class SettingsScreen extends StatelessWidget {
                         : null,
                     title: const Text('穏やかな朝'),
                   ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            WashiCard(
+              child: Column(
+                children: [
+                  for (var index = 0;
+                      index < AppInformationTopic.values.length;
+                      index++) ...[
+                    if (index > 0) const Divider(height: 1),
+                    ListTile(
+                      leading: Icon(AppInformationTopic.values[index].icon),
+                      title: Text(AppInformationTopic.values[index].title),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => AppInformationScreen(
+                            topic: AppInformationTopic.values[index],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),

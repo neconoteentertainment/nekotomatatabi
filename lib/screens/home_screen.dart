@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../models/custom_stamp.dart';
 import '../services/app_repository.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_banner_ad.dart';
 import '../widgets/washi_surface.dart';
 import 'creator_website_screen.dart';
 import 'history_screen.dart';
+import 'help_screen.dart';
 import 'item_screen.dart';
 import 'record_screen.dart';
 import 'settings_screen.dart';
@@ -150,7 +150,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   image: 'assets/home/card_settings.png',
                                   imageAlignment: Alignment.center,
                                   icon: Icons.tune,
-                                  title: '設定',
+                                  title: '設定・アプリ情報',
                                   subtitle: 'アプリの情報や\n各種設定を確認',
                                   onTap: () => _push(SettingsScreen(repository: repository)),
                                 ),
@@ -159,10 +159,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   icon: Icons.help_outline,
                                   title: 'アプリの\n使用方法',
                                   subtitle: 'ねことまた旅の\n使い方を確認',
-                                  onTap: () => showDialog<void>(
-                                    context: context,
-                                    builder: (_) => const _HelpDialog(),
-                                  ),
+                                  onTap: () => _push(const HelpScreen()),
                                 ),
                                 _HomeCardData(
                                   image: 'assets/home/card_hp.png',
@@ -438,50 +435,5 @@ class _PageIndicator extends StatelessWidget {
         Container(width: 42, height: 1, color: palette.onBackground.withValues(alpha: .24)),
       ],
     );
-  }
-}
-
-class _HelpDialog extends StatelessWidget {
-  const _HelpDialog();
-  @override
-  Widget build(BuildContext context) {
-    final palette = AppPalette.of(context);
-    return AlertDialog(
-        backgroundColor: palette.panel,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: palette.accent.withValues(alpha: .55)),
-        ),
-        title: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('アプリの使用方法', style: TextStyle(color: palette.onPanel)),
-            const SizedBox(height: 2),
-            Text(
-              'HOW TO USE',
-              style: TextStyle(color: palette.accent, fontSize: 9, fontWeight: FontWeight.w500, letterSpacing: 2.1),
-            ),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Text(
-            '1. 「旅の思い出を記録する」で現在地を取得します。\n\n'
-            '2. 周辺候補から訪問した場所を登録します。\n\n'
-            '3. 「写真を撮る」で猫スタンプや文字を複数重ねて撮影できます。\n\n'
-            '4. 「旅の手助け」で電子チケット、お気に入りサイト、旅の支出を整理できます。\n\n'
-            '5. スタンプは「スタンプ登録」で$customStampSlotCount個まで登録できます。\n\n'
-            '6. 「旅の予定を立てる」で1日のスケジュールを作成し、QRコードで共有できます。\n\n'
-            '7. 「旅の思い出を振り返る」で一覧・都道府県・年月から確認できます。',
-            style: TextStyle(color: palette.onPanel.withValues(alpha: .78), height: 1.55),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('閉じる', style: TextStyle(color: palette.accent)),
-          ),
-        ],
-      );
   }
 }

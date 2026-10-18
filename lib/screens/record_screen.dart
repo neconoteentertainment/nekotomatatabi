@@ -209,7 +209,10 @@ class _RecordScreenState extends State<RecordScreen> {
                   if (_placeError != null)
                     Padding(
                       padding: const EdgeInsets.only(top: 8),
-                      child: Text('周辺施設取得失敗: $_placeError', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                      child: Text(
+                        _placeError!,
+                        style: const TextStyle(color: Color(0xFFB71C1C)),
+                      ),
                     ),
                   TextButton.icon(
                     style: TextButton.styleFrom(foregroundColor: WashiSurface.ink),

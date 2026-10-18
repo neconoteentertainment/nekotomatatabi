@@ -347,7 +347,12 @@ class _TravelPlanScreenState extends State<TravelPlanScreen> {
   }
 
   Future<Uint8List> _qrBytes(TravelPlan plan) async {
-    final painter = QrPainter(data: plan.toShareText(), version: QrVersions.auto, gapless: true);
+    final painter = QrPainter(
+      data: plan.toShareText(),
+      version: QrVersions.auto,
+      gapless: true,
+      emptyColor: Colors.white,
+    );
     final data = await painter.toImageData(1024, format: ui.ImageByteFormat.png);
     if (data == null) throw Exception('QRコード画像を作成できませんでした。');
     return data.buffer.asUint8List();
@@ -371,7 +376,12 @@ class _TravelPlanScreenState extends State<TravelPlanScreen> {
         content: Column(mainAxisSize: MainAxisSize.min, children: [
           const Text('相手の「ねことまた旅」でこのQRコードを読み取ってください。'),
           const SizedBox(height: 16),
-          QrImageView(data: plan.toShareText(), version: QrVersions.auto, size: 260),
+          QrImageView(
+            data: plan.toShareText(),
+            version: QrVersions.auto,
+            size: 260,
+            backgroundColor: Colors.white,
+          ),
         ]),
         actions: [
           TextButton.icon(onPressed: () => _saveQr(plan), icon: const Icon(Icons.download), label: const Text('画像を保存')),

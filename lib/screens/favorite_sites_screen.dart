@@ -315,6 +315,7 @@ class _PrefectureSitesScreenState extends State<_PrefectureSitesScreen> {
       data: raw,
       version: QrVersions.auto,
       gapless: true,
+      emptyColor: Colors.white,
     );
     final data = await painter.toImageData(
       1024,
@@ -360,7 +361,12 @@ class _PrefectureSitesScreenState extends State<_PrefectureSitesScreen> {
             children: [
               Text('${sites.length}件のURLをまとめたQRコードです。'),
               const SizedBox(height: 16),
-              QrImageView(data: raw, version: QrVersions.auto, size: 260),
+              QrImageView(
+                data: raw,
+                version: QrVersions.auto,
+                size: 260,
+                backgroundColor: Colors.white,
+              ),
             ],
           ),
         ),

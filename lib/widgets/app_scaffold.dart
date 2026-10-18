@@ -13,6 +13,7 @@ class AppScaffold extends StatelessWidget {
     this.subtitle,
     this.actions,
     this.showAd = true,
+    this.fitTitle = false,
   });
 
   final String title;
@@ -20,10 +21,20 @@ class AppScaffold extends StatelessWidget {
   final Widget child;
   final List<Widget>? actions;
   final bool showAd;
+  final bool fitTitle;
 
   @override
   Widget build(BuildContext context) {
     final palette = AppPalette.of(context);
+    final titleWidget = Text(
+      title,
+      maxLines: fitTitle ? 1 : null,
+      style: TextStyle(
+        color: palette.onBackground,
+        fontWeight: FontWeight.w700,
+        letterSpacing: .2,
+      ),
+    );
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: palette.brightness == Brightness.dark
           ? SystemUiOverlayStyle.light
@@ -39,14 +50,10 @@ class AppScaffold extends StatelessWidget {
           title: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                title,
-                style: TextStyle(
-                  color: palette.onBackground,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: .2,
-                ),
-              ),
+              if (fitTitle)
+                FittedBox(fit: BoxFit.scaleDown, child: titleWidget)
+              else
+                titleWidget,
               if (subtitle != null) ...[
                 const SizedBox(height: 2),
                 Text(
