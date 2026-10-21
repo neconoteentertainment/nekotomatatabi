@@ -371,21 +371,48 @@ class _TravelPlanScreenState extends State<TravelPlanScreen> {
   void _showQr(TravelPlan plan) {
     showDialog<void>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('QRコードで共有'),
-        content: Column(mainAxisSize: MainAxisSize.min, children: [
-          const Text('相手の「ねことまた旅」でこのQRコードを読み取ってください。'),
-          const SizedBox(height: 16),
-          QrImageView(
-            data: plan.toShareText(),
-            version: QrVersions.auto,
-            size: 260,
-            backgroundColor: Colors.white,
+        content: SizedBox(
+          width: 300,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  '相手の「ねことまた旅」でこのQRコードを読み取ってください。',
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: 260,
+                  height: 260,
+                  child: QrImageView(
+                    data: plan.toShareText(),
+                    version: QrVersions.auto,
+                    backgroundColor: Colors.white,
+                    errorStateBuilder: (_, __) => const Center(
+                      child: Text(
+                        '予定の情報量が多いため、QRコードを作成できません。'
+                        '予定やメモを減らしてお試しください。',
+                        style: TextStyle(color: Colors.black),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ]),
+        ),
         actions: [
-          TextButton.icon(onPressed: () => _saveQr(plan), icon: const Icon(Icons.download), label: const Text('画像を保存')),
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('閉じる')),
+          TextButton.icon(
+            onPressed: () => _saveQr(plan),
+            icon: const Icon(Icons.download),
+            label: const Text('画像を保存'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('閉じる'),
+          ),
         ],
       ),
     );
