@@ -1,0 +1,37 @@
+全国観光地オフラインカタログ
+© OpenStreetMap contributors
+Database license: Open Data Commons Open Database License (ODbL) v1.0
+https://opendatacommons.org/licenses/odbl/1-0/
+Attribution / contributors: https://www.openstreetmap.org/copyright
+
+Source distributor: Geofabrik GmbH
+https://download.geofabrik.de/asia/japan.html
+Pinned input: https://download.geofabrik.de/asia/japan-261019.osm.pbf
+OSM snapshot: 2026-10-19T20:21:11Z
+Input MD5: 8a4c1be7b0b42a6b1ac621aa2590a0e5
+
+This extracted database is offered under ODbL 1.0. The license applies to
+this catalog, independently of application code, graphics, music and user data.
+The database (manifest.json and *.json.gz) is distributed in this source ZIP.
+For app binary recipients, a machine-readable copy of the same catalog is
+available on request from neconote_entertainment@outlook.jp under ODbL 1.0.
+Keep this offer available when distributing the app or host the catalog publicly.
+
+Each gzip cell is UTF-8 JSON rows:
+[OSM type/id, name, latitude, longitude, category index].
+Category names, cell file names/counts and SHA-256 hashes are in manifest.json.
+Rows are deduplicated by name and coordinates rounded to 5 decimals.
+Ways/relations use bounding-box centers (not entrance or boundary geometry).
+Names prefer name:ja, then name, then official_name. Objects without names
+are omitted. The selection follows the app's existing Overpass tag filters:
+tourism attraction/museum/gallery/zoo/aquarium/viewpoint/hotel/guest_house/theme_park;
+amenity place_of_worship/arts_centre; historic; leisure park/garden;
+castle_type; shop department_store/mall. Matching follows the existing regex.
+Data is not exhaustive and may include closed, incomplete or inaccurate places.
+
+Regenerate from repository root (Python 3, osmium 4.3.2):
+  python -m pip install osmium==4.3.2
+  python tools/build_offline_catalog.py /path/to/japan-261019.osm.pbf assets/offline_places
+The raw PBF is for regeneration only; do not add it to app assets or Git.
+For newer snapshots update the source checksum, date and expected count in the
+builder, and the displayed snapshot in application information before rebuilding.

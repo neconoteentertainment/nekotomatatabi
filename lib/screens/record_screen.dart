@@ -24,6 +24,7 @@ class _RecordScreenState extends State<RecordScreen> {
   bool _loading = false;
   String? _gpsError;
   String? _placeError;
+  String? _placeNotice;
   String? _selectedMemoryId;
   int _radiusMeters = 300;
 
@@ -32,6 +33,7 @@ class _RecordScreenState extends State<RecordScreen> {
       _loading = true;
       _gpsError = null;
       _placeError = null;
+      _placeNotice = null;
       _places = [];
     });
 
@@ -58,7 +60,16 @@ class _RecordScreenState extends State<RecordScreen> {
         radiusMeters: _radiusMeters,
       );
       if (!mounted) return;
-      setState(() => _places = places);
+      setState(() {
+        _places = places;
+        final snapshot = _locationService.offlineSnapshot?.replaceAll('-', '/');
+        _placeNotice = _locationService.lastSearchUsedOffline
+            ? '端末内の観光地データを使用しています（$snapshot時点）。'
+            : null;
+        if (places.isEmpty) {
+          _placeNotice = '${_placeNotice ?? ""}\nこの範囲には候補がありません。範囲を広げるか、場所を手入力してください。'.trim();
+        }
+      });
     } catch (e) {
       if (mounted) setState(() => _placeError = e.toString().replaceFirst('Exception: ', ''));
     } finally {
@@ -206,6 +217,17 @@ class _RecordScreenState extends State<RecordScreen> {
                   ),
                   if (_locationCapturedAt != null)
                     Text('取得時刻: ${_locationCapturedAt!.year}/${_locationCapturedAt!.month}/${_locationCapturedAt!.day} ${_locationCapturedAt!.hour.toString().padLeft(2, '0')}:${_locationCapturedAt!.minute.toString().padLeft(2, '0')}'),
+                  if (_placeNotice != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(_placeNotice!, style: const TextStyle(color: WashiSurface.ink)),
+                    ),
+                  if (!_loading && _placeError == null)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 8),
+                      child: Text('© OpenStreetMap contributors · ODbL 1.0',
+                        style: TextStyle(fontSize: 11, color: WashiSurface.mutedInk)),
+                    ),
                   if (_placeError != null)
                     Padding(
                       padding: const EdgeInsets.only(top: 8),

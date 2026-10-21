@@ -1,7 +1,7 @@
 /// アプリ内の説明文。実際のデータ処理や利用サービスを変更した際は更新する。
 class AppInformation {
-  static const version = '0.26.1+37';
-  static const updatedAt = '2026年10月18日';
+  static const version = '0.26.3+39';
+  static const updatedAt = '2026年10月21日';
   static const contactEmail = 'neconote_entertainment@outlook.jp';
 
   static const privacySections = <AppInformationSection>[
@@ -17,7 +17,7 @@ class AppInformation {
     AppInformationSection(
       '3. 位置情報と周辺観光地の検索',
       '端末で位置情報の利用を許可し、現在地からの検索を実行した際に位置情報を取得します。周辺観光地の検索では、緯度・経度と検索範囲をOverpass APIの提供者へ送信します。訪問記録の都道府県を調べる際には、記録対象の緯度・経度をNominatimへ送信します。\n\n'
-      '接続先はoverpass-api.de、overpass.private.coffee、overpass.osm.jp、およびnominatim.openstreetmap.orgです。通信に伴い、IPアドレスや通信日時なども各提供者に伝わります。各サービスは国外で情報を処理する場合があり、受信した情報は各提供者の方針に従って取り扱われます。位置情報をバックグラウンドで継続追跡する機能はありません。',
+      'Overpassの通信失敗・時間切れ時には、同梱の全国観光地データ（2026年10月19日時点）を端末内で検索します。この端末内検索では外部へ位置情報を送信しません。Geoapifyは使用しません。\n\n接続先はlz4.overpass-api.de、z.overpass-api.de、overpass.private.coffee、overpass.osm.jp、およびnominatim.openstreetmap.orgです。通信に伴い、IPアドレスや通信日時なども各提供者に伝わります。各サービスは国外で情報を処理する場合があり、受信した情報は各提供者の方針に従って取り扱われます。位置情報をバックグラウンドで継続追跡する機能はありません。',
     ),
     AppInformationSection(
       '4. カメラ・写真とQRコード',
@@ -86,7 +86,7 @@ class AppInformation {
       '地図・観光地データ',
       '© OpenStreetMap contributors\n\n'
       '周辺観光地や都道府県の検索にOpenStreetMap由来のデータを利用しています。OpenStreetMapのデータはOpen Database License（ODbL）に基づいて提供されています。著作権表示、ライセンス、データ提供者の詳細は下記の公式ページをご確認ください。\n\n'
-      '検索API：Overpass API、Nominatim',
+      '同梱データ：Geofabrikの日本データ（2026年10月19日）から抽出した観光地カタログ。© OpenStreetMap contributors / ODbL 1.0。抽出済みデータと再生成スクリプトは本アプリの配布ソース内 assets/offline_places/ および tools/ に収録しています。同梱カタログのデータ一式をご希望の方には、お問い合わせ窓口からODbL 1.0で提供します（アプリ本体の素材のライセンスとは別です）。\n\n検索API：Overpass API、Nominatim',
     ),
     AppInformationSection(
       '画像・スタンプ等',
