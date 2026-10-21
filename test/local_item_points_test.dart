@@ -25,6 +25,7 @@ TravelMemory _memory({
     );
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   test('名産品ポイントは県ごとの重複しない訪問地数で計算する', () async {
     final repository = AppRepository(_MemoryStorage());
 
