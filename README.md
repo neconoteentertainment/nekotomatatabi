@@ -1,3 +1,50 @@
+## AdMob本番ID設定版（2026年10月21日、0.26.5+41）
+
+- iOS・AndroidのAdMobアプリIDとバナー広告ユニットIDを登録済みの実IDへ設定しました。広告の配置・同意取得の流れは維持しています。
+- Debug / ProfileはGoogle公式テスト広告、Releaseは本番広告です。Windowsには広告を出しません。
+- TestFlight・Google Playのテスト配布をテスト広告にする場合は、**ビルド時に** `--dart-define=USE_TEST_ADS=true` を指定します。TestFlightであることは自動判定しません。
+- `setup_mac.sh` を再実行してもテスト用アプリIDへ戻りません。アプリIDは本番、広告ユニットIDはビルド条件で切り替える構成です。
+- 依存パッケージ、写真・記録データ、iOSの署名・Share Extension・App Group、Android署名設定は変更していません。
+
+### 通常の実機テスト（テスト広告）
+
+```sh
+flutter pub get
+flutter run
+```
+
+### TestFlight用（テスト広告）
+
+```sh
+flutter build ipa --release --dart-define=USE_TEST_ADS=true
+```
+
+### Google Playテスト配布用（テスト広告、配布用署名は別途設定）
+
+```sh
+flutter build appbundle --release --dart-define=USE_TEST_ADS=true
+```
+
+### ストア公開用（本番広告）
+
+```sh
+# MacでiOS向け
+flutter build ipa --release
+# Android向け（配布用署名を設定してから）
+flutter build appbundle --release
+```
+
+公開用はテストフラグを付けずに作り直してください。以前のビルドで指定したdart-defineを、次回のコマンドが自動で引き継ぐ前提にはしないでください。
+本番広告の動作確認はAdMobでテスト端末登録を行い、自分の本番広告をクリックしないでください。
+広告が表示されるには、AdMob側のアプリ確認・ストア連携・配信状態や同意状態などの条件も関係します。本変更だけで配信開始を保証するものではありません。
+
+### 次の公開準備
+
+- AdMobのアプリ確認、ストア連携、app-ads.txt、プライバシーメッセージ設定を確認。
+- このZIPのAndroid Releaseはまだデバッグ署名です。Playへ提出する前にアップロード鍵・Release署名を設定してください。
+- iOS / Androidのストア申告（広告SDKを含むデータ利用）・公開プライバシーポリシー、配布用ビルドと実機テストを実施。
+- Androidの端末固有 `local.properties`、iOS / Windowsの再生成可能な `ephemeral`、自動生成のFlutterパス設定・プラグイン一覧、IDE設定は同梱対象から除外しています。`flutter pub get`・ビルドで再生成されます。
+
 ## Android共有・カメラ回転修正版（2026年10月21日、0.26.4+40）
 
 - AndroidのChromeなどで「共有」→「ねことまた旅」を選び、サイト名と保存先（47都道府県／その他）を確認して登録できます。初期の保存先は「その他」です。キャンセルした場合は登録しません。
@@ -143,7 +190,7 @@
 - カメラ・QR読み取り・写真全画面表示には広告を表示しません。
 - Google UMPによる広告同意確認と、必要な地域での「広告のプライバシー設定」を追加しました。
 - Windowsでは広告SDKを開始せず、広告欄も表示しません。
-- 現在はGoogle公式のテスト用IDです。ストア公開前に本番IDへ差し替えてください。
+- 当時はGoogle公式テストIDを使用。現在の切替方法は先頭の「AdMob本番ID設定版」を参照してください。
 - バージョンを `0.16.0+21` に更新しました。
 
 ## 2026-10-03 Safari共有からのお気に入り登録
@@ -282,4 +329,4 @@ XcodeでTeamを設定してiPhone実機を選択し、Runしてください。
 - データは端末内保存です。
 - QR共有は旅程データそのものをQR化するため、サーバーは使用しません。
 - 周辺施設検索はOpenStreetMap / Overpass系公開データを利用しています。通信状況や公開サーバーの混雑時は候補取得に失敗する場合がありますが、現在地取得後は手入力で記録できます。
-- 広告は開発確認中のためテスト広告です。Google公式テストIDのままストア公開しないでください。
+- 広告の本番・テスト切替は先頭の「AdMob本番ID設定版」を参照してください。

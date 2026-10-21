@@ -17,11 +17,11 @@ if [ ! -f ios/Runner.xcodeproj/project.pbxproj ]; then
   flutter create . --platforms=ios --org com.neconote --project-name nekotomatatabi
 fi
 
-# flutter createでAndroidを生成した場合も、テスト用AdMobアプリIDを確実に残す。
+# flutter createでAndroidを生成した場合も、本番AdMobアプリIDを確実に残す。
 android_manifest="android/app/src/main/AndroidManifest.xml"
 if [ -f "$android_manifest" ] && \
    ! grep -q 'com.google.android.gms.ads.APPLICATION_ID' "$android_manifest"; then
-  perl -0pi -e 's!(<application\b[^>]*>)!$1\n        <!-- Google公式テスト用AdMobアプリID。本番公開前に実IDへ差し替えます。 -->\n        <meta-data\n            android:name="com.google.android.gms.ads.APPLICATION_ID"\n            android:value="ca-app-pub-3940256099942544~3347511713" />!' "$android_manifest"
+  perl -0pi -e 's!(<application\b[^>]*>)!$1\n        <!-- ねことまた旅のAdMobアプリID。広告ユニットのテスト切替はDart側で行います。 -->\n        <meta-data\n            android:name="com.google.android.gms.ads.APPLICATION_ID"\n            android:value="ca-app-pub-4121724126236374~8369197101" />!' "$android_manifest"
 fi
 
 # iOSのビルド環境を15.5以上へ統一する。
@@ -42,7 +42,7 @@ if [ -f ios/Runner/Info.plist ]; then
   set_plist_string NSPhotoLibraryUsageDescription "写真と電子チケットを選択するために写真ライブラリを使用します。"
   set_plist_string NSPhotoLibraryAddUsageDescription "撮影した画像を写真ライブラリへ保存するために使用します。"
   set_plist_string NSLocationWhenInUseUsageDescription "現在地周辺の観光地を検索するために位置情報を使用します。"
-  set_plist_string GADApplicationIdentifier "ca-app-pub-3940256099942544~1458002511"
+  set_plist_string GADApplicationIdentifier "ca-app-pub-4121724126236374~5720264297"
 fi
 flutter pub get
 

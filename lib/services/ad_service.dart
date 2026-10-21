@@ -1,23 +1,19 @@
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
+import 'ad_configuration.dart';
+
 /// 広告SDKと同意管理を一か所にまとめます。
 ///
-/// 現在はGoogle公式のテスト用IDだけを使います。本番公開前にAdMobで発行した
-/// アプリID・広告ユニットIDへ差し替えてください。
+/// 開発時はテスト広告、本番ビルドはAdMobで発行した広告ユニットを使います。
+/// 配布テストでは --dart-define=USE_TEST_ADS=true を指定してください。
 class AdService {
   AdService._();
 
   static final AdService instance = AdService._();
 
-  static const _androidBannerTestId =
-      'ca-app-pub-3940256099942544/9214589741';
-  static const _iosBannerTestId =
-      'ca-app-pub-3940256099942544/2435281174';
-
   final ValueNotifier<bool> canLoadAds = ValueNotifier<bool>(false);
-  final ValueNotifier<bool> privacyOptionsRequired =
-      ValueNotifier<bool>(false);
+  final ValueNotifier<bool> privacyOptionsRequired = ValueNotifier<bool>(false);
 
   bool _started = false;
   bool _sdkInitialized = false;
@@ -28,9 +24,7 @@ class AdService {
           defaultTargetPlatform == TargetPlatform.iOS);
 
   String get bannerAdUnitId =>
-      defaultTargetPlatform == TargetPlatform.android
-          ? _androidBannerTestId
-          : _iosBannerTestId;
+      AdConfiguration.current.bannerAdUnitId(defaultTargetPlatform);
 
   Future<void> initialize() async {
     if (!isSupported || _started) return;

@@ -10,10 +10,10 @@
         android:label="ねことまた旅"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
-        <!-- Google公式テスト用AdMobアプリID。本番公開前に実IDへ差し替えます。 -->
+        <!-- ねことまた旅のAdMobアプリID。広告ユニットのテスト切替はDart側で行います。 -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713" />
+            android:value="ca-app-pub-4121724126236374~8369197101" />
         <activity
             android:name="com.neconote.nekotomatatabi.MainActivity"
             android:exported="true"

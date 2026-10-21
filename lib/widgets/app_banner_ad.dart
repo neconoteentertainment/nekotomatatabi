@@ -3,7 +3,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../services/ad_service.dart';
 
-/// 画面幅に合うGoogle公式テストバナー。
+/// 画面幅に合うAdMobバナー（本番・テストの切替はAdServiceで管理）。
 ///
 /// 対応OSでは読み込み前から広告枠の高さを確保し、広告の成否によって
 /// ページ本体が伸縮しないようにします。
