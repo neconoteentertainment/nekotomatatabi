@@ -1,6 +1,6 @@
 /// アプリ内の説明文。実際のデータ処理や利用サービスを変更した際は更新する。
 class AppInformation {
-  static const version = '0.26.3+39';
+  static const version = '0.26.4+40';
   static const updatedAt = '2026年10月21日';
   static const contactEmail = 'neconote_entertainment@outlook.jp';
 
@@ -22,7 +22,7 @@ class AppInformation {
     AppInformationSection(
       '4. カメラ・写真とQRコード',
       '写真撮影、スタンプ合成、画像の取り込み・保存、QRコードの読み取りのため、必要に応じてカメラや写真へのアクセス権限を使用します。これらの画像処理やQRコードの生成・読み取りは端末上で行います。\n\n'
-      'Safariの共有機能から登録したサイトの名称・URL・保存先は、本アプリと共有拡張の間で受け渡します。QRコードには共有対象の予定やサイト情報が含まれるため、共有相手や公開範囲にご注意ください。',
+      'iPhoneのSafari等の共有機能から登録したサイトの名称・URL・保存先は、本アプリと共有拡張の間で受け渡します。AndroidではChrome等の共有機能からサイト情報を受け取り、確認画面で指定した保存先に端末内で登録します。QRコードには共有対象の予定やサイト情報が含まれるため、共有相手や公開範囲にご注意ください。',
     ),
     AppInformationSection(
       '5. 広告配信と外部サービス',

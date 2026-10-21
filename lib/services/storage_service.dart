@@ -155,10 +155,11 @@ class StorageService {
 
   Future<void> saveFavoriteSites(List<FavoriteSite> sites) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
+    final saved = await prefs.setString(
       _favoriteSitesKey,
       jsonEncode(sites.map((site) => site.toJson()).toList(growable: false)),
     );
+    if (!saved) throw StateError('お気に入りの保存に失敗しました。');
   }
 
   Future<bool> loadBgmEnabled() async {

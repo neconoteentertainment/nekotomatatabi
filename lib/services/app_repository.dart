@@ -19,6 +19,8 @@ class AppRepository extends ChangeNotifier {
   final StorageService _storage;
   final AppAudioService _audio;
   final ShareInboxService _shareInbox = ShareInboxService();
+  Future<int>? _shareImport;
+  bool _shareImportRequested = false;
   List<TravelMemory> _memories = [];
   List<String?> _stampPaths = List<String?>.filled(customStampSlotCount, null);
   List<TravelPlan> _travelPlans = [];
@@ -49,18 +51,19 @@ class AppRepository extends ChangeNotifier {
   }
 
   int pointsForPrefecture(String prefecture) {
-    return _uniqueMemories(
-      _memories.where((m) => m.prefecture == prefecture),
-    ).length;
+    return _uniqueMemories(_memories.where((m) => m.prefecture == prefecture))
+        .length;
   }
 
   bool isLocalItemUnlocked(LocalItem item) =>
       pointsForPrefecture(item.prefecture) >= item.threshold;
 
   List<LocalItem> unlockedLocalItems({String? prefecture}) => localItems
-      .where((item) =>
-          (prefecture == null || item.prefecture == prefecture) &&
-          isLocalItemUnlocked(item))
+      .where(
+        (item) =>
+            (prefecture == null || item.prefecture == prefecture) &&
+            isLocalItemUnlocked(item),
+      )
       .toList(growable: false);
 
   Iterable<TravelMemory> _uniqueMemories(Iterable<TravelMemory> source) sync* {
@@ -82,18 +85,15 @@ class AppRepository extends ChangeNotifier {
     _bgmEnabled = await _storage.loadBgmEnabled();
     _bgmTrack = await _storage.loadBgmTrack();
     _colorTheme = appColorThemeFromStorage(await _storage.loadColorTheme());
-    await _audio.configure(
-      enabled: _bgmEnabled,
-      asset: _bgmAsset(_bgmTrack),
-    );
+    await _audio.configure(enabled: _bgmEnabled, asset: _bgmAsset(_bgmTrack));
     _ready = true;
     notifyListeners();
   }
 
   String _bgmAsset(String track) => switch (track) {
-        'odayaka' => 'bgm/odayakana_asa.mp3',
-        _ => 'bgm/umibe_no_asa.mp3',
-      };
+    'odayaka' => 'bgm/odayakana_asa.mp3',
+    _ => 'bgm/umibe_no_asa.mp3',
+  };
 
   Future<void> setBgmEnabled(bool enabled) async {
     _bgmEnabled = enabled;
@@ -139,11 +139,12 @@ class AppRepository extends ChangeNotifier {
     await addPhotoToMemory(memoryId, saved);
   }
 
-
   Future<void> deletePhotoFromMemory(String memoryId, String path) async {
     _memories = _memories.map((m) {
       if (m.id != memoryId) return m;
-      return m.copyWith(photoPaths: m.photoPaths.where((p) => p != path).toList());
+      return m.copyWith(
+        photoPaths: m.photoPaths.where((p) => p != path).toList(),
+      );
     }).toList();
     await _storage.saveMemories(_memories);
     try {
@@ -226,11 +227,11 @@ class AppRepository extends ChangeNotifier {
   }
 
   Future<int> importFavoriteSites(Iterable<FavoriteSite> sites) async {
+    final before = List<FavoriteSite>.of(_favoriteSites);
     var added = 0;
     for (final site in sites) {
       final duplicated = _favoriteSites.any(
-        (entry) =>
-            entry.prefecture == site.prefecture && entry.url == site.url,
+        (entry) => entry.prefecture == site.prefecture && entry.url == site.url,
       );
       if (!duplicated) {
         _favoriteSites.insert(0, site);
@@ -238,17 +239,46 @@ class AppRepository extends ChangeNotifier {
       }
     }
     if (added > 0) {
-      await _storage.saveFavoriteSites(_favoriteSites);
+      try {
+        await _storage.saveFavoriteSites(_favoriteSites);
+      } catch (_) {
+        _favoriteSites = before;
+        rethrow;
+      }
       notifyListeners();
     }
     return added;
   }
 
-  /// Safari の共有画面から登録された項目を、既存のお気に入りへ取り込む。
-  Future<int> importSharedFavoriteSites() async {
-    final pending = await _shareInbox.takePendingFavoriteSites();
-    if (pending.isEmpty) return 0;
-    return importFavoriteSites(pending);
+  void startShareInboxListening() {
+    _shareInbox.startListening(() {
+      importSharedFavoriteSites();
+    });
+  }
+
+  /// Serialize lifecycle and foreground notifications to avoid duplicate imports.
+  Future<int> importSharedFavoriteSites() {
+    _shareImportRequested = true;
+    return _shareImport ??= _drainSharedFavoriteSites().whenComplete(
+      () => _shareImport = null,
+    );
+  }
+
+  Future<int> _drainSharedFavoriteSites() async {
+    var added = 0;
+    try {
+      do {
+        _shareImportRequested = false;
+        final pending = await _shareInbox.takePendingFavoriteSites();
+        if (pending.isNotEmpty) {
+          added += await importFavoriteSites(pending);
+          await _shareInbox.acknowledgeFavoriteSites(pending);
+        }
+      } while (_shareImportRequested);
+    } catch (_) {
+      // Android's native inbox remains intact when writing favorites fails.
+    }
+    return added;
   }
 
   Future<void> setStamp(int index, File source) async {
@@ -278,6 +308,7 @@ class AppRepository extends ChangeNotifier {
 
   @override
   void dispose() {
+    _shareInbox.stopListening();
     _audio.dispose();
     super.dispose();
   }

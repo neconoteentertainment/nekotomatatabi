@@ -106,7 +106,7 @@ class _HelpDetailScreen extends StatelessWidget {
         _HelpKind.assist => const _TextAndImageHelp(
             paragraphs: [
               '「電子チケットの保存」では、スマホ内の写真データを取り込むことができます。バスの予約番号やQRコードなど、スクリーンショットで保存しているデータの保存にご活用ください。',
-              '「お気に入りのサイト」は、ホームページなど観光地のWebページを保存できます。Safariの共有ボタンから「ねことまた旅」のアプリを選んで登録してください。登録情報はQRコードを使って、友達などと共有することも可能です。',
+              '「お気に入りのサイト」は、ホームページなど観光地のWebページを保存できます。iPhoneはSafari、AndroidはChromeなどの共有ボタンから「ねことまた旅」を選び、サイト名と保存先を確認して登録してください。登録情報はQRコードを使って、友達などと共有することも可能です。',
               '「旅の支出記録」では、旅・月ごとで使用した支出記録をつけることができます。',
             ],
             assetPath: 'assets/help/travel_assist.jpg',

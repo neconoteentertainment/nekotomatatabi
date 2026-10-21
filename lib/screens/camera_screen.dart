@@ -14,6 +14,7 @@ import 'package:path_provider/path_provider.dart';
 import '../models/custom_stamp.dart';
 import '../models/local_item.dart';
 import '../services/app_repository.dart';
+import '../services/camera_photo_geometry.dart';
 import '../services/storage_service.dart';
 
 enum _OverlayKind { stamp, text, signboard }
@@ -95,8 +96,8 @@ class _CameraScreenState extends State<CameraScreen> {
   // 時計回りに90度ずれる端末がある。UIは回さず、映像レイヤーだけを
   // 反時計回りへ戻す。保存画像の縦横補正にも同じ方向を使う。
   bool get _isLandscapeMode => _orientationIndex == 1;
-  int get _previewCorrectionQuarterTurns => _isLandscapeMode ? 3 : 0;
-  double get _savedImageCorrectionDegrees => _isLandscapeMode ? -90 : 90;
+  int get _previewCorrectionQuarterTurns => cameraPreviewCorrectionQuarterTurns(
+      Theme.of(context).platform, _isLandscapeMode);
 
   @override
   void initState() {
@@ -171,7 +172,8 @@ class _CameraScreenState extends State<CameraScreen> {
 
 
   Future<void> _cycleOrientation() async {
-    if (_changingOrientation) return;
+    if (_changingOrientation || _saving || _initializing) return;
+    final previousIndex = _orientationIndex;
     final nextIndex = (_orientationIndex + 1) % _orientations.length;
     final next = _orientations[nextIndex];
     setState(() {
@@ -179,20 +181,26 @@ class _CameraScreenState extends State<CameraScreen> {
       _changingOrientation = true;
     });
 
-    // UIの表示方向だけを切り替える。CameraPreviewと撮影画像の向きは
-    // カメラプラグインが端末センサーから取得する方向へ追従させる。
-    // lockCaptureOrientationを使うと、iOS横画面でプレビューだけが
-    // 90度ずれる場合があるため、ここでは撮影方向を固定しない。
+    // CameraXは実際の画面回転からプレビューとJPEGの方向を決定する。
+    // captureだけを固定すると、プレビュー内部のセンサー補正とずれるため
+    // 撮影方向のロックやAndroidへの追加90度補正は行わない。
     try {
       await SystemChrome.setPreferredOrientations([next]);
       await Future<void>.delayed(const Duration(milliseconds: 180));
+    } catch (_) {
+      await SystemChrome.setPreferredOrientations([_orientations[previousIndex]]);
+      if (mounted) {
+        setState(() => _orientationIndex = previousIndex);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('画面の向きを切り替えられませんでした。再度お試しください。')));
+      }
     } finally {
       if (mounted) setState(() => _changingOrientation = false);
     }
   }
 
   Future<void> _switchCamera() async {
-    if (_cameras.length < 2 || _saving) return;
+    if (_cameras.length < 2 || _saving || _initializing || _changingOrientation) return;
     final next = (_cameraIndex + 1) % _cameras.length;
     setState(() => _initializing = true);
     try {
@@ -531,58 +539,15 @@ class _CameraScreenState extends State<CameraScreen> {
     return data?.buffer.asUint8List();
   }
 
-  img.Image _cropToPreview(img.Image source, Size previewSize) {
-    var oriented = img.bakeOrientation(source);
-    if (previewSize.width <= 1 || previewSize.height <= 1) return oriented;
-
-    // 通常はJPEGのEXIF方向をbakeOrientationが反映する。端末やOSにより
-    // EXIFが付かず縦横だけが残る場合は、プレビューと同じ回転方向で
-    // 表示中の向きへ合わせる。
-    final targetLandscape = previewSize.width > previewSize.height;
-    final sourceLandscape = oriented.width > oriented.height;
-    if (targetLandscape != sourceLandscape) {
-      oriented = img.copyRotate(
-        oriented,
-        angle: targetLandscape ? _savedImageCorrectionDegrees : 90,
-        interpolation: img.Interpolation.linear,
-      );
-    }
-
-    final targetAspect = previewSize.width / previewSize.height;
-    final sourceAspect = oriented.width / oriented.height;
-
-    if ((sourceAspect - targetAspect).abs() < .0001) return oriented;
-
-    if (sourceAspect > targetAspect) {
-      final cropWidth = (oriented.height * targetAspect).round().clamp(1, oriented.width).toInt();
-      final x = ((oriented.width - cropWidth) / 2).round();
-      return img.copyCrop(
-        oriented,
-        x: x,
-        y: 0,
-        width: cropWidth,
-        height: oriented.height,
-      );
-    }
-
-    final cropHeight = (oriented.width / targetAspect).round().clamp(1, oriented.height).toInt();
-    final y = ((oriented.height - cropHeight) / 2).round();
-    return img.copyCrop(
-      oriented,
-      x: 0,
-      y: y,
-      width: oriented.width,
-      height: cropHeight,
-    );
-  }
-
   Future<void> _shoot() async {
     final controller = _controller;
-    if (controller == null || !controller.value.isInitialized || _saving) return;
+    if (controller == null || !controller.value.isInitialized || _saving ||
+        _changingOrientation || _initializing) return;
     setState(() => _saving = true);
     try {
       final previewBox = _previewKey.currentContext?.findRenderObject() as RenderBox?;
       final previewSize = previewBox?.size ?? context.size ?? const Size(1, 1);
+      final platform = Theme.of(context).platform;
 
       final shot = await controller.takePicture();
       final baseBytes = await File(shot.path).readAsBytes();
@@ -592,7 +557,10 @@ class _CameraScreenState extends State<CameraScreen> {
       // CameraPreview は BoxFit.cover で中央クロップしているため、
       // 保存画像も同じ縦横比・中央クロップにしてからスタンプを合成する。
       // これによりシャッター時に見えていた構図と保存画像を一致させる。
-      final base = _cropToPreview(decoded, previewSize);
+      final base = prepareCameraPhoto(decoded, previewSize,
+          platform: platform,
+          mirrorHorizontally: Platform.isAndroid &&
+              controller.description.lensDirection == CameraLensDirection.front);
       final xRatio = base.width / previewSize.width;
       final yRatio = base.height / previewSize.height;
 
@@ -713,6 +681,9 @@ class _CameraScreenState extends State<CameraScreen> {
                           ),
                         ),
                 ),
+                if (_changingOrientation)
+                  const Positioned.fill(child: ColoredBox(color: Colors.black,
+                      child: Center(child: CircularProgressIndicator()))),
                 ..._overlays.map(_buildOverlay),
                 if (_focusIndicator != null)
                   Positioned(
@@ -874,12 +845,12 @@ class _CameraScreenState extends State<CameraScreen> {
                           ),
                           const SizedBox(width: 18),
                           FloatingActionButton.large(
-                            onPressed: _saving || _initializing ? null : _shoot,
+                            onPressed: _saving || _initializing || _changingOrientation ? null : _shoot,
                             child: _saving || _initializing ? const CircularProgressIndicator() : const Icon(Icons.camera_alt, size: 34),
                           ),
                           const SizedBox(width: 18),
                           IconButton.filledTonal(
-                            onPressed: _changingOrientation ? null : _cycleOrientation,
+                            onPressed: _saving || _initializing || _changingOrientation ? null : _cycleOrientation,
                             tooltip: '画面を回転',
                             icon: const Icon(Icons.screen_rotation),
                           ),

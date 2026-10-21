@@ -1,3 +1,14 @@
+## Android共有・カメラ回転修正版（2026年10月21日、0.26.4+40）
+
+- AndroidのChromeなどで「共有」→「ねことまた旅」を選び、サイト名と保存先（47都道府県／その他）を確認して登録できます。初期の保存先は「その他」です。キャンセルした場合は登録しません。
+- アプリの起動前・起動中・バックグラウンドからの共有に対応します。URLを含むテキストの共有を対象とし、Webページの自動取得やファイル共有は行いません。
+- AndroidのカメラにiPhone向けの90度補正を適用しないよう修正。既存の画面回転ボタンで縦／横を切り替え、カメラプラグイン（CameraX）の画面回転処理とJPEGのEXIFを使用します。回転切替中や撮影中の操作競合を防ぎ、保存時はプレビューと同じ比率の中央切り抜きを行います。Androidの前面カメラの写真は鏡像プレビューに合わせます。
+- AndroidのWRITE_EXTERNAL_STORAGEはmaxSdkVersion="29"を維持し、カメラライブラリの28と競合しないようtools:replaceを指定しています。
+- 今回は `lib` に加え、`android/app/src/main/AndroidManifest.xml` と `android/app/src/main/kotlin/com/neconote/nekotomatatabi/MainActivity.kt` の反映が必要です。既存のGit管理フォルダへ内容を反映し、`.git`やご自身の署名鍵・署名設定を残してください。
+- 元ZIPと同様にAndroidのGradleプロジェクトが未生成の環境では、プロジェクト内で `flutter create . --platforms=android --org com.neconote --project-name nekotomatatabi` を実行し、`flutter pub get` を実行します。今回のManifestとMainActivityが生成処理で保持されることを確認しています。既存のiOSプロジェクトは再生成しないでください。
+- 実機での最終確認：Androidの共有（アプリ終了時／起動中／バックグラウンド）、登録キャンセル・同一URL再共有、カメラの縦→横→縦の繰り返し、前後カメラと保存画像。iPhoneはSafari共有と横向き撮影を再確認してください。
+- 自動テスト・静的解析等の結果と制約は `CHANGELOG_20261021_android.md` を参照してください。
+
 ## 全国観光地データ同梱版（2026年10月21日）
 
 - 観光地検索はOverpassを優先し、通信失敗・不正応答・最大8秒の待機後には、同梱の日本全国の観光地カタログへ自動切り替えます。GeoapifyやAPIキーは使用しません。
@@ -141,7 +152,7 @@
 - 共有画面内でサイト名を確認・編集し、47都道府県から保存先を選べます。
 - 登録したURLはApp Groups経由で本体アプリへ渡し、起動時・復帰時に既存のお気に入りへ取り込みます。
 - 同じ都道府県に同じURLが登録済みの場合は重複追加しません。
-- iOS専用機能です。Windows版とAndroid版の既存動作には影響しません。
+- 2026-10-21版からAndroidのChrome等の共有にも対応しています。iPhoneでは既存のShare Extensionを使用します。
 - バージョンを `0.15.0+20` に更新しました。
 
 ### 初回のiPhone実機確認

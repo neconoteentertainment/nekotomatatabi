@@ -29,7 +29,9 @@ class _NekotoMataTabiAppState extends State<NekotoMataTabiApp>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    widget.repository.startShareInboxListening();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.repository.importSharedFavoriteSites();
       AdService.instance.initialize();
     });
   }
