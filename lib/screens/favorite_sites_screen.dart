@@ -347,27 +347,45 @@ class _PrefectureSitesScreenState extends State<_PrefectureSitesScreen> {
       _message('共有するサイトがありません。');
       return;
     }
+
     final raw = FavoriteSiteBundle(
       prefecture: widget.prefecture,
       sites: sites,
     ).toShareText();
+
     showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: Text('${widget.prefecture}のお気に入りを共有'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('${sites.length}件のURLをまとめたQRコードです。'),
-              const SizedBox(height: 16),
-              QrImageView(
-                data: raw,
-                version: QrVersions.auto,
-                size: 260,
-                backgroundColor: Colors.white,
-              ),
-            ],
+        content: SizedBox(
+          width: 300,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('${sites.length}件のURLをまとめたQRコードです。'),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: 260,
+                  height: 260,
+                  child: QrImageView(
+                    data: raw,
+                    version: QrVersions.auto,
+                    size: 260,
+                    backgroundColor: Colors.white,
+                    errorStateBuilder: (context, error) {
+                      return const Center(
+                        child: Text(
+                          'QRコードを作成できませんでした。'
+                          '共有する情報量が多すぎる可能性があります。',
+                          textAlign: TextAlign.center,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         actions: [
@@ -377,7 +395,7 @@ class _PrefectureSitesScreenState extends State<_PrefectureSitesScreen> {
             label: const Text('画像を保存'),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('閉じる'),
           ),
         ],
